@@ -75,13 +75,58 @@ static_assert(sizeof(rasterizer_vertex_world) == 0x38);
 
 struct s_rasterizer_render_globals
 {
-	long width;
-	long height;
+	long resolution_width;
+	long resolution_height;
+	long backbuffer_width;
+	long backbuffer_height;
 
 	// #TODO: there are more values below these ^ in memory
 	// figure out what other values are part of `s_rasterizer_render_globals`
 };
-static_assert(sizeof(s_rasterizer_render_globals) == 0x8); // 0x8 for now
+static_assert(sizeof(s_rasterizer_render_globals) == 0x10); // 0x10 for now
+
+
+struct __declspec(align(4)) s_gui_widget_render_info {
+	char type;
+	unsigned int flags;
+	real_point2d vertices[4];
+	char gap28[4];
+};
+
+struct s_gui_bitmap_widget_render_info : s_gui_widget_render_info {
+	int bitmap_group_index;
+	__int16 bitmap_sequence_index;
+	__int16 bitmap_index;
+	char gap34[12];
+	unsigned int color;
+	float offset_u;
+	float offset_v;
+	int blend_mode;
+	int explicit_shader_index;
+};
+
+struct s_screen_vertex {
+	real_point2d position;
+	vector2d texcoord;
+	unsigned int color;
+};
+
+struct s_rasterizer_screen_geometry_parameters {
+	char gap0[8];
+	int texture_datum_index;
+	int texture_datum_index_2;
+	char gap10[4];
+	char texture_address_mode1;
+	char texture_address_mode2;
+	char field_16;
+	char gap17[41];
+	real_argb_color color;
+	char gap50[64];
+	__int16 alpha_blend_mode;
+	char texture_filter_mode;
+	int explicit_shader_index;
+	int surface_index;
+};
 
 struct c_rasterizer
 {
@@ -228,14 +273,30 @@ struct c_rasterizer
 
 	enum e_sampler_address_mode
 	{
+		_address_mode_wrap = 0,
 		_sampler_address_mode_unknown0 = 0,
-		_sampler_address_mode_unknown1,
+		_address_mode_clamp,
+		_sampler_address_mode_unknown1 = 1,
+		_address_mode_mirror,
+		_address_mode_black_border,
+		_address_mode_mirror_once,
+		_address_mode_mirror_once_border
 	};
 
 	enum e_sampler_filter_mode
 	{
+		_filter_trilinear = 0,
 		_sampler_filter_mode_unknown0 = 0,
-		_sampler_filter_mode_unknown1,
+		_filter_point,
+		_sampler_filter_mode_unknown1 = 1,
+		_filter_bilinear,
+		_filter_unused_00,
+		_filter_anisotropic_2x,
+		_filter_unused_01,
+		_filter_anisotropic_4x,
+		_filter_lightprobe_texture_array,
+		_filter_texture_array_quadlinear,
+		_filter_texture_array_quadanisotropic_2x
 	};
 
 	enum e_z_buffer_mode
@@ -267,6 +328,7 @@ struct c_rasterizer
 		unsigned int offset;
 		unsigned int stride;
 	};
+
 	static_assert(sizeof(s_stream_source) == 0xC);
 
 	static void __cdecl begin(short_rectangle2d, short_rectangle2d);
@@ -365,6 +427,12 @@ struct c_rasterizer
 	static void __cdecl set_vertex_shader_constant(long start_register, long vector4f_count, vector4d const* constant_data);
 	static void __cdecl set_vertex_shader_constant_bool(long start_register, long bool_count, int const* constant_data);
 	static void __cdecl set_vertex_shader_constant_int(long start_register, long vector4i_count, int const* constant_data);
+
+	//OUR ADDITIONS
+	static e_surface __cdecl get_render_target(unsigned long render_target_index);
+	static void __cdecl rasterizer_psuedo_dynamic_screen_quad_draw(s_rasterizer_screen_geometry_parameters* params, s_screen_vertex* vertices);
+	//Should prolly move this but we're lazy so here it shall stay
+	static void __cdecl draw_bitmap(s_gui_bitmap_widget_render_info* info, short_rectangle2d* display_bounds);
 
 	static _D3DRENDERSTATETYPE(&x_last_render_state_types)[4];
 
@@ -757,6 +825,13 @@ struct s_texture_references_block
 	void update_reference_names();
 };
 static_assert(sizeof(s_texture_references_block) == sizeof(s_tag_reference));
+
+extern void __cdecl get_blur_factors(float* blur_x, float* blur_y);
+extern c_rasterizer::e_surface __cdecl blur_display();
+extern void __cdecl draw_widget_blur(s_gui_bitmap_widget_render_info* info, short_rectangle2d* display_bounds);
+extern void __cdecl ui_draw_bitmap_widget(s_gui_bitmap_widget_render_info* data, short_rectangle2d* display_bounds);
+extern void __cdecl dof_gaussian_blur(c_rasterizer::e_surface src_surface, c_rasterizer::e_surface dst_surface, float x, float y);
+extern void __cdecl scale_ui_screen_vertices(real_point2d* vertices);
 
 extern long render_debug_toggle_default_lightmaps_texaccum;
 extern bool& render_debug_toggle_default_static_lighting;

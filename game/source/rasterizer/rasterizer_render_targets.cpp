@@ -22,30 +22,30 @@ c_render_surface* __cdecl get_render_surface_default(c_rasterizer::e_surface sur
 // `sub_A487E0` gets called in `render_bitmap` where ui blur is supposed to be handled
 // giving us the `texture_ref` that would be set
 // `unknown` is `2` and potentially a surface (that of `display`)
-c_rasterizer_texture_ref* __cdecl sub_A487E0(c_rasterizer_texture_ref* texture_ref, long unknown)
-{
-	c_rasterizer_texture_ref* result = INVOKE(0x00A487E0, sub_A487E0, texture_ref, unknown);
-
-	c_screen_postprocess::setup_rasterizer_for_postprocess(0);
-	c_rasterizer::set_depth_stencil_surface(c_rasterizer::_surface_none);
-
-	// this `blur_display` uses the `screenshot_display` surface and not `display`
-	c_rasterizer::e_surface surface = c_screen_postprocess::blur_display();
-
-	// for some reason when using the correct surface `display` no ui renders at all
-	//c_rasterizer::set_render_target(0, c_rasterizer::_surface_display, NONE);
-
-	// use the `screenshot_display` surface
-	c_rasterizer::set_render_target(0, c_rasterizer::_surface_screenshot_display, NONE);
-
-	c_rasterizer::set_depth_stencil_surface(c_rasterizer::_surface_depth_stencil);
-	c_rasterizer::restore_last_viewport();
-	c_rasterizer::restore_last_scissor_rect();
-	
-	result->m_datum_ref = (dword)get_render_surface_default(surface)->m_d3d_texture;
-
-	return result;
-}
+//c_rasterizer_texture_ref* __cdecl sub_A487E0(c_rasterizer_texture_ref* texture_ref, long unknown)
+//{
+//	c_rasterizer_texture_ref* result = INVOKE(0x00A487E0, sub_A487E0, texture_ref, unknown);
+//
+//	c_screen_postprocess::setup_rasterizer_for_postprocess(0);
+//	c_rasterizer::set_depth_stencil_surface(c_rasterizer::_surface_none);
+//
+//	// this `blur_display` uses the `screenshot_display` surface and not `display`
+//	c_rasterizer::e_surface surface = c_screen_postprocess::blur_display();
+//
+//	// for some reason when using the correct surface `display` no ui renders at all
+//	c_rasterizer::set_render_target(0, c_rasterizer::_surface_display, NONE);
+//
+//	// use the `screenshot_display` surface
+//	c_rasterizer::set_render_target(0, c_rasterizer::_surface_screenshot_display, NONE);
+//
+//	c_rasterizer::set_depth_stencil_surface(c_rasterizer::_surface_depth_stencil);
+//	c_rasterizer::restore_last_viewport();
+//	c_rasterizer::restore_last_scissor_rect();
+//	
+//	result->m_datum_ref = (dword)get_render_surface_default(surface)->m_d3d_texture;
+//
+//	return result;
+//}
 
 //#define ISEXPERIMENTAL_NO_UI_BACKGROUND
 

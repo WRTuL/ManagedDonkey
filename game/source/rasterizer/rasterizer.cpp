@@ -10,6 +10,7 @@
 #include "shell/shell.hpp"
 #include "shell/shell_windows.hpp"
 #include "tag_files/files.hpp"
+#include "interface/user_interface.hpp"
 
 #include <d3d9.h>
 
@@ -86,6 +87,149 @@ DATA_PATCH_DECLARE(0x00A2508C, rasterizer_clear_color_fix, rasterizer_clear_colo
 // patch clear color with pre-applied alpha
 byte const rasterizer_clear_color_bytes[4] = { 0xCC, 0x77, 0x55, 0x00 };
 DATA_PATCH_DECLARE(0x00A250A8 + 1, rasterizer_clear_color, rasterizer_clear_color_bytes);
+
+//ADDED BY US
+HOOK_DECLARE_CALL(0x00AB9F75, ui_draw_bitmap_widget);
+HOOK_DECLARE_CALL(0x00A61AFC, dof_gaussian_blur);
+
+c_rasterizer::e_surface __cdecl c_rasterizer::get_render_target(unsigned long render_target_index)
+{
+	return INVOKE(0x00A48720, get_render_target, render_target_index);
+}
+
+void __cdecl rasterizer_psuedo_dynamic_screen_quad_draw(s_rasterizer_screen_geometry_parameters* params, s_screen_vertex* vertices)
+{
+	INVOKE(0xA46AD0, rasterizer_psuedo_dynamic_screen_quad_draw, params, vertices);
+}
+
+void __cdecl draw_bitmap(s_gui_bitmap_widget_render_info* info, short_rectangle2d* display_bounds)
+{
+	INVOKE(0xB170F0, draw_bitmap, info, display_bounds);
+}
+
+int blur_quality = 0;
+
+void __cdecl get_blur_factors(float* blur_x, float* blur_y) 
+{
+	s_user_interface_shared_globals const* ui_shared_globals = user_interface_shared_tag_globals_try_and_get();
+
+	if (!ui_shared_globals) {
+		*blur_x = 1.5f;
+		*blur_y = 1.5f;
+		return;
+	}
+
+	*blur_x = ui_shared_globals->horizontal_blur_factor;
+	*blur_y = ui_shared_globals->vertical_blur_factor;
+}
+
+c_rasterizer::e_surface __cdecl blur_display() 
+{
+	float blur_x = 0.f, blur_y = 0.f;
+	get_blur_factors(&blur_x, &blur_y);
+
+	c_screen_postprocess::setup_rasterizer_for_postprocess(false);
+	c_rasterizer::set_depth_stencil_surface(c_rasterizer::e_surface::_surface_disable);
+
+	c_rasterizer::e_surface surface = c_screen_postprocess::blur_display(blur_x, blur_y, blur_quality);
+
+	c_rasterizer::set_render_target(0, c_rasterizer::e_surface::_surface_screenshot_display, -1);
+	c_rasterizer::set_depth_stencil_surface(c_rasterizer::e_surface::_surface_depth_stencil);
+
+	c_rasterizer::restore_last_viewport();
+	c_rasterizer::restore_last_scissor_rect();
+
+	return surface;
+}
+
+void __cdecl draw_widget_blur(s_gui_bitmap_widget_render_info* info, short_rectangle2d* display_bounds) 
+{
+	s_rasterizer_screen_geometry_parameters params;
+	memset(&params.texture_datum_index, 0, 0x94u);
+
+	s_screen_vertex vertices[4];
+
+	params.surface_index = blur_display();
+	params.texture_datum_index = -1;
+	params.alpha_blend_mode = info->blend_mode;
+	params.explicit_shader_index = info->explicit_shader_index;
+
+	params.color.alpha = 1.f;
+	params.color.color.red = 1.f;
+	params.color.color.green = 1.f;
+	params.color.color.blue = 1.f;
+
+	float display_width = (display_bounds->x1 - display_bounds->x0);
+	float display_height = (display_bounds->y1 - display_bounds->y0);
+
+	float min_u = (info->vertices[0].x + 0.5) / display_width;
+	float max_u = (info->vertices[3].x + 0.5) / display_width;
+	float min_v = (info->vertices[2].y + 0.5) / display_height;
+	float max_v = (info->vertices[3].y + 0.5) / display_height;
+
+	scale_ui_screen_vertices(info->vertices);
+
+	vertices[0].position.x = info->vertices[0].x;
+	vertices[0].position.y = info->vertices[0].y;
+	vertices[0].texcoord.i = min_u + info->offset_u;
+	vertices[0].texcoord.j = min_v + info->offset_v;
+	vertices[0].color = info->color;
+
+	vertices[1].position.x = info->vertices[2].x;
+	vertices[1].position.y = info->vertices[2].y;
+	vertices[1].texcoord.i = max_u + info->offset_u;
+	vertices[1].texcoord.j = min_v + info->offset_v;
+	vertices[1].color = info->color;
+
+	vertices[2].position.x = info->vertices[3].x;
+	vertices[2].position.y = info->vertices[3].y;
+	vertices[2].texcoord.i = max_u + info->offset_u;
+	vertices[2].texcoord.j = max_v + info->offset_v;
+	vertices[2].color = info->color;
+
+	vertices[3].position.x = info->vertices[1].x;
+	vertices[3].position.y = info->vertices[1].y;
+	vertices[3].texcoord.i = min_u + info->offset_u;
+	vertices[3].texcoord.j = max_v + info->offset_v;
+	vertices[3].color = info->color;
+
+	rasterizer_psuedo_dynamic_screen_quad_draw(&params, vertices);
+}
+
+void __cdecl ui_draw_bitmap_widget(s_gui_bitmap_widget_render_info* data, short_rectangle2d* display_bounds) 
+{
+	if (data->flags & (1 << 2)) {
+		c_rasterizer::e_surface old_surface = c_rasterizer::get_render_target(0);
+
+		draw_widget_blur(data, display_bounds);
+		c_rasterizer::set_render_target(0, old_surface, -1);
+	}
+	else if (data->bitmap_index == -1 || (data->bitmap_index & 0x8000) == 0)
+		draw_bitmap(data, display_bounds);
+}
+
+void __cdecl dof_gaussian_blur(c_rasterizer::e_surface src_surface, c_rasterizer::e_surface dst_surface, float x, float y) 
+{
+	c_screen_postprocess::gaussian_blur_arbitrary_scaled(src_surface, dst_surface, x, y, blur_quality);
+}
+
+void __cdecl scale_ui_screen_vertices(real_point2d* vertices) 
+{
+	long width, height;
+	global_preferences_get_screen_resolution(&width, &height);
+
+	float width_scale = width / 1152.f;
+	vertices->x = vertices->x * width_scale;
+	vertices[1].x = vertices[1].x * width_scale;
+	vertices[2].x = vertices[2].x * width_scale;
+	vertices[3].x = vertices[3].x * width_scale;
+
+	float height_scale = height / 640.f;
+	vertices->y = vertices->y * height_scale;
+	vertices[1].y = vertices[1].y * height_scale;
+	vertices[2].y = vertices[2].y * height_scale;
+	vertices[3].y = vertices[3].y * height_scale;
+}
 
 void __stdcall sub_79BA30(long width, long height)
 {
@@ -196,7 +340,7 @@ real __cdecl c_rasterizer::get_aspect_ratio()
 {
 	//return INVOKE(0x00A1FA30, get_aspect_ratio);
 
-	return (real)render_globals.width / (real)render_globals.height;
+	return (real)render_globals.resolution_width / (real)render_globals.resolution_height;
 }
 
 void __cdecl c_rasterizer::get_display_pixel_bounds(short_rectangle2d* display_pixel_bounds)
@@ -517,7 +661,7 @@ void __cdecl c_rasterizer::set_alpha_blend_mode_custom_device_no_cache(IDirect3D
 
 void __cdecl c_rasterizer::set_color_write_enable(long render_state, long render_state_value)
 {
-	//INVOKE(0x00A231E0, set_color_write_enable, render_state, render_state_value);
+	INVOKE(0x00A231E0, set_color_write_enable, render_state, render_state_value);
 
 	//if (render_state_value == x_last_render_state_value[render_state])
 	//	return;

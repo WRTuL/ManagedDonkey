@@ -206,6 +206,10 @@ struct c_player_view :
 		return m_output_user_index;
 	}
 
+	long get_blur_surface() {
+		return m_blur_surface;
+	}
+
 	static void __cdecl get_player_render_camera_orientation(real_matrix4x3* camera);
 	void __cdecl create_frame_textures(long player_index);
 
@@ -239,7 +243,7 @@ protected:
 	e_output_user_index m_output_user_index;
 	long m_splitscreen_res;
 
-	long __unknown26B0;
+	long m_blur_surface;
 
 	// __unknown26B4 = player_window_index == iterator.m_window_count - 1
 	// last_splitcreen_player?

@@ -470,7 +470,7 @@ bool __cdecl game_time_update(real world_seconds_elapsed, real* game_seconds_ela
 		else
 		{
 			game_ticks_leftover = real_desired_ticks - (real)game_ticks_elapsed;
-			ASSERT(abs(game_ticks_elapsed - game_ticks_target) <= 1);
+			ASSERT(fabs(game_ticks_elapsed - game_ticks_target) <= 1);
 			ASSERT(game_ticks_leftover >= -1.0f && game_ticks_leftover <= 2.0f);
 		}
 	

@@ -12,7 +12,52 @@ struct s_observer_depth_of_field;
 
 struct c_screen_postprocess
 {
-	static c_rasterizer::e_surface __cdecl blur_display();
+	//ADDED BY US
+
+	static c_rasterizer::e_surface __cdecl blur_display(
+		float blur_x,
+		float blur_y,
+		int quality_setting);
+
+	static void __cdecl calculate_gaussian_kernel(
+		float* out_kernel,
+		int kernel_size,
+		float a3,
+		float radius);
+
+	static void __cdecl calculate_taps_from_kernel(
+		float* kernel,
+		vector4d* out_taps,
+		int tap_count,
+		bool horizontal,
+		float a5);
+
+	static void __cdecl gaussian_blur_arbitrary(
+		c_rasterizer::e_surface src_surface,
+		c_rasterizer::e_surface dst_surface,
+		float x,
+		float y);
+
+	static void __cdecl gaussian_blur_arbitrary_scaled(
+		c_rasterizer::e_surface src_surface,
+		c_rasterizer::e_surface dst_surface,
+		float x,
+		float y,
+		int quality_setting);
+
+	static void __cdecl gaussian_blur_custom(
+		c_rasterizer::e_surface src_surface,
+		c_rasterizer::e_surface dst_surface,
+		float x,
+		float y);
+
+	static void __cdecl gaussian_blur_fixed(
+		c_rasterizer::e_surface src_surface,
+		c_rasterizer::e_surface dst_surface,
+		float a0,
+		float a1,
+		float a2,
+		float a3);
 
 	static void __cdecl copy(
 		long explicit_shader_index,
