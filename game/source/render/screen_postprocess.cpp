@@ -159,8 +159,8 @@ void __cdecl c_screen_postprocess::gaussian_blur_arbitrary_scaled(
 {
 	float display_width = c_rasterizer::render_globals.resolution_width;
 	float display_height = c_rasterizer::render_globals.resolution_height;
-	float backbuffer_width = c_rasterizer::render_globals.backbuffer_width;
-	float backbuffer_height = c_rasterizer::render_globals.backbuffer_height;
+	float backbuffer_width = c_rasterizer::render_globals.back_buffer_width;
+	float backbuffer_height = c_rasterizer::render_globals.back_buffer_height;
 
 	if (quality_setting) {
 		if (quality_setting == 1) {

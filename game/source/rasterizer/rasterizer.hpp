@@ -77,14 +77,23 @@ struct s_rasterizer_render_globals
 {
 	long resolution_width;
 	long resolution_height;
-<<<<<<< HEAD
-	long backbuffer_width;
-	long backbuffer_height;
-
-	// #TODO: there are more values below these ^ in memory
-	// figure out what other values are part of `s_rasterizer_render_globals`
+	long back_buffer_width;
+	long back_buffer_height;
+	long resolution_offset_x;
+	long resolution_offset_y;
+	real resolution_scale_x;
+	real resolution_scale_y;
+	long occlusion_view_resolution;
+	long window_width24;
+	long window_height28;
+	long width2C;
+	long height30;
+	long resolution_width34;
+	long resolution_height38;
+	void* window_handle;
+	bool is_d3d9ex;
 };
-static_assert(sizeof(s_rasterizer_render_globals) == 0x10); // 0x10 for now
+static_assert(sizeof(s_rasterizer_render_globals) == 0x44);
 
 
 struct __declspec(align(4)) s_gui_widget_render_info {
@@ -128,25 +137,6 @@ struct s_rasterizer_screen_geometry_parameters {
 	int explicit_shader_index;
 	int surface_index;
 };
-=======
-	long back_buffer_width;
-	long back_buffer_height;
-	long resolution_offset_x;
-	long resolution_offset_y;
-	real resolution_scale_x;
-	real resolution_scale_y;
-	long occlusion_view_resolution;
-	long window_width24;
-	long window_height28;
-	long width2C;
-	long height30;
-	long resolution_width34;
-	long resolution_height38;
-	void* window_handle;
-	bool is_d3d9ex;
-};
-static_assert(sizeof(s_rasterizer_render_globals) == 0x44);
->>>>>>> upstream/main
 
 struct c_rasterizer
 {
@@ -451,17 +441,15 @@ struct c_rasterizer
 	static void __cdecl set_vertex_shader_constant_bool(long start_register, long bool_count, int const* constant_data);
 	static void __cdecl set_vertex_shader_constant_int(long start_register, long vector4i_count, int const* constant_data);
 
-<<<<<<< HEAD
 	//OUR ADDITIONS
 	static e_surface __cdecl get_render_target(unsigned long render_target_index);
 	static void __cdecl rasterizer_psuedo_dynamic_screen_quad_draw(s_rasterizer_screen_geometry_parameters* params, s_screen_vertex* vertices);
 	//Should prolly move this but we're lazy so here it shall stay
 	static void __cdecl draw_bitmap(s_gui_bitmap_widget_render_info* info, short_rectangle2d* display_bounds);
 
-=======
 	static bool& g_d3d_device_is_lost;
 	static bool& g_d3d_device_reset;
->>>>>>> upstream/main
+
 	static _D3DRENDERSTATETYPE(&x_last_render_state_types)[4];
 	static dword& g_render_thread;
 
