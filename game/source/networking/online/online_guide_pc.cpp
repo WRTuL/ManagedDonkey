@@ -32,7 +32,7 @@ HOOK_DECLARE(0x004E1960, online_guide_show_sign_in_ui);
 HOOK_DECLARE(0x004E1980, online_guide_update);
 
 c_virtual_keyboard_task* __cdecl c_virtual_keyboard_task::constructor(
-	const char* file,
+	char const* file,
 	long line,
 	e_controller_index controller_index,
 	const wchar_t* default_text,
@@ -196,7 +196,7 @@ void* c_virtual_keyboard_task::destructor(dword a1)
 	return this;
 }
 
-const char* c_virtual_keyboard_task::get_context_string()
+char const* c_virtual_keyboard_task::get_context_string()
 {
 	return "XShowKeyboardUI";
 }

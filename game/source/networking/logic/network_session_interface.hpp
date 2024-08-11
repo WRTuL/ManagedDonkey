@@ -13,12 +13,15 @@ struct s_network_session_interface_user
 {
 	long state;
 	s_player_identifier identifier;
-	long controller_index;
+	c_enum<e_controller_index, long, _controller_index0, k_number_of_controllers> controller_index;
 	s_player_configuration player_data;
-	e_output_user_index output_user_index;
+	long player_update_number;
 	c_static_string<64> override_hopper_directory;
 	long player_voice_settings;
-	byte __data78[0x20];
+	long session_index;
+	long team_index;
+	long __times1680[3];
+	long __times168C[3];
 };
 static_assert(sizeof(s_network_session_interface_user) == 0x1698);
 
@@ -49,7 +52,7 @@ struct s_network_session_interface_globals
 	s_transport_qos_result qos_result;
 	long bandwidth_bps;
 	long max_machine_count;
-	dword peer_status_flags;
+	c_flags<e_network_session_peer_properties_status_flags, dword, k_network_session_peer_properties_status_flags> peer_status_flags;
 	short ready_hopper_identifier;
 	byte : 8;
 	byte : 8;
@@ -68,7 +71,7 @@ struct s_network_session_interface_globals
 	byte : 8;
 	byte : 8;
 	byte : 8;
-	c_static_array<s_network_session_interface_user, 4> users;
+	c_static_array<s_network_session_interface_user, k_number_of_output_users> users;
 	qword game_instance;
 	long scenario_type;
 	c_static_string<128> scenario_path;
@@ -143,7 +146,7 @@ extern long __cdecl network_session_interface_get_local_user_state(long user_ind
 extern qword __cdecl network_session_interface_get_local_user_xuid(long user_index);
 extern void __cdecl network_session_interface_handle_message(long session_network_message);
 extern bool __cdecl network_session_interface_initialize(c_network_session_manager* session_manager);
-extern bool __cdecl network_session_interface_local_user_exists(long user_index);
+extern bool __cdecl network_session_interface_local_user_exists(e_output_user_index output_user_index);
 extern void __cdecl network_session_interface_notify_set_local_specific_film(s_saved_film_description const* film);
 extern void __cdecl network_session_interface_remove_local_user(long user_index);
 extern void __cdecl network_session_interface_reset(long session_index);
@@ -155,9 +158,9 @@ extern void __cdecl network_session_interface_set_local_user_override_hopper_dir
 extern void __cdecl network_session_interface_set_local_user_properties(long user_index, e_controller_index controller_index, s_player_configuration const* player_data, dword player_voice_settings);
 extern void __cdecl network_session_interface_set_local_user_state(long user_index, long state);
 extern void __cdecl network_session_interface_set_local_user_xuid(long user_index, qword xuid);
-extern void __cdecl network_session_interface_set_peer_status_flag(long peer_status_flag, bool enabled);
+extern void __cdecl network_session_interface_set_peer_status_flag(e_network_session_peer_properties_status_flags peer_status_flag, bool enabled);
 extern void __cdecl network_session_interface_set_ready_hopper_identifier(word hopper_identifier, e_session_game_start_error error);
-extern bool __cdecl network_session_interface_test_peer_status_flag(long peer_status_flag);
+extern bool __cdecl network_session_interface_test_peer_status_flag(e_network_session_peer_properties_status_flags peer_status_flag);
 extern void __cdecl network_session_interface_update();
 extern void __cdecl network_session_interface_update_local_state();
 extern void __cdecl network_session_interface_update_session(c_network_session* session);
@@ -166,9 +169,9 @@ extern void __cdecl network_session_set_player_failure_reason(long user_index, e
 //network_session_update_local_specific_parameters
 //network_session_update_local_peer_properties
 //network_session_update_team_indices
-extern void __cdecl network_session_update_user_properties(c_network_session* session, long user_index);
+extern void __cdecl network_session_update_user_properties(c_network_session* session, e_output_user_index output_user_index);
 extern void __cdecl network_session_update_user_removal(c_network_session* session);
-extern bool __cdecl network_squad_session_boot_player(long player_index, long reason);
+extern bool __cdecl network_squad_session_boot_player(long player_index, e_network_session_boot_reason reason);
 extern bool __cdecl network_squad_session_build_status(s_network_session_status_data* game_status);
 extern bool __cdecl network_squad_session_can_set_game_settings();
 extern bool __cdecl network_squad_session_controls_coop_game_options(bool* is_leader);

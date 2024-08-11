@@ -84,7 +84,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)source\;$(ProjectDir)resource\;$(SolutionDir)third_party\DIA\include\;$(SolutionDir)third_party\detours\include\;$(SolutionDir)third_party\directx\include\;$(SolutionDir)third_party\directxtex\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source\;$(ProjectDir)resource\;$(ProjectDir)common\lib_3dpart\;$(ProjectDir)common\incl.sys\;$(SolutionDir)third_party\DIA\include\;$(SolutionDir)third_party\detours\include\;$(SolutionDir)third_party\directx\include\;$(SolutionDir)third_party\directxtex\include\</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4099</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -94,7 +94,9 @@
       <AdditionalDependencies>dbghelp.lib;diaguids.lib;detours.lib;Ws2_32.lib;Winmm.lib;d3d9.lib;d3dx9.lib;DirectXTex.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>copy /b $(ProjectDir)source\config\version.cpp +,, $(ProjectDir)source\config\version.cpp</Command>
+      <Command>IF "$(LocalDebuggerWorkingDirectory)" EQU "$(ProjectDir)" powershell "$content = \"#pragma once`n`n#define VERSION_GIT_COMMIT \" + (git rev-parse --short=7 HEAD).Trim() + \"`n`n\"; Set-Content -Path \"$(ProjectDir)source\config\version_git_commit.hpp\" -Value $content -NoNewline;"
+
+copy /b $(ProjectDir)source\config\version.cpp +,, $(ProjectDir)source\config\version.cpp</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
@@ -117,7 +119,7 @@ POPD
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)source\;$(ProjectDir)resource\;$(SolutionDir)third_party\DIA\include\;$(SolutionDir)third_party\detours\include\;$(SolutionDir)third_party\directx\include\;$(SolutionDir)third_party\directxtex\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source\;$(ProjectDir)resource\;$(ProjectDir)common\lib_3dpart\;$(ProjectDir)common\incl.sys\;$(SolutionDir)third_party\DIA\include\;$(SolutionDir)third_party\detours\include\;$(SolutionDir)third_party\directx\include\;$(SolutionDir)third_party\directxtex\include\</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4099</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -139,7 +141,9 @@ POPD
 </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>copy /b $(ProjectDir)source\config\version.cpp +,, $(ProjectDir)source\config\version.cpp</Command>
+      <Command>IF "$(LocalDebuggerWorkingDirectory)" EQU "$(ProjectDir)" powershell "$content = \"#pragma once`n`n#define VERSION_GIT_COMMIT \" + (git rev-parse --short=7 HEAD).Trim() + \"`n`n\"; Set-Content -Path \"$(ProjectDir)source\config\version_git_commit.hpp\" -Value $content -NoNewline;"
+
+copy /b $(ProjectDir)source\config\version.cpp +,, $(ProjectDir)source\config\version.cpp</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseDedicated|Win32'">
@@ -152,7 +156,7 @@ POPD
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
-      <AdditionalIncludeDirectories>$(ProjectDir)source\;$(ProjectDir)resource\;$(SolutionDir)third_party\DIA\include\;$(SolutionDir)third_party\detours\include\;$(SolutionDir)third_party\directx\include\;$(SolutionDir)third_party\directxtex\include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)source\;$(ProjectDir)resource\;$(ProjectDir)common\lib_3dpart\;$(ProjectDir)common\incl.sys\;$(SolutionDir)third_party\DIA\include\;$(SolutionDir)third_party\detours\include\;$(SolutionDir)third_party\directx\include\;$(SolutionDir)third_party\directxtex\include\</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4099</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -174,7 +178,9 @@ POPD
 </Command>
     </PostBuildEvent>
     <PreBuildEvent>
-      <Command>copy /b $(ProjectDir)source\config\version.cpp +,, $(ProjectDir)source\config\version.cpp</Command>
+      <Command>IF "$(LocalDebuggerWorkingDirectory)" EQU "$(ProjectDir)" powershell "$content = \"#pragma once`n`n#define VERSION_GIT_COMMIT \" + (git rev-parse --short=7 HEAD).Trim() + \"`n`n\"; Set-Content -Path \"$(ProjectDir)source\config\version_git_commit.hpp\" -Value $content -NoNewline;"
+
+copy /b $(ProjectDir)source\config\version.cpp +,, $(ProjectDir)source\config\version.cpp</Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -182,6 +188,7 @@ POPD
     <ClCompile Include="source\ai\actor_perception.cpp" />
     <ClCompile Include="source\ai\actor_stimulus.cpp" />
     <ClCompile Include="source\ai\ai_dialogue.cpp" />
+    <ClCompile Include="source\ai\ai_hint_definitions.cpp" />
     <ClCompile Include="source\ai\ai_player.cpp" />
     <ClCompile Include="source\ai\ai_reference_frame.cpp" />
     <ClCompile Include="source\ai\ai_vehicles.cpp" />
@@ -192,9 +199,13 @@ POPD
     <ClCompile Include="source\ai\props.cpp" />
     <ClCompile Include="source\ai\sector.cpp" />
     <ClCompile Include="source\ai\squads.cpp" />
+    <ClCompile Include="source\ai\swarms.cpp" />
     <ClCompile Include="source\cache\cache_file_codec_work.cpp" />
     <ClCompile Include="source\cache\cache_file_io_failure.cpp" />
+    <ClCompile Include="source\creatures\creatures.cpp" />
     <ClCompile Include="source\cseries\cseries_system_memory.cpp" />
+    <ClCompile Include="source\devices\device_machines.cpp" />
+    <ClCompile Include="source\devices\device_terminals.cpp" />
     <ClCompile Include="source\effects\decals.cpp" />
     <ClCompile Include="source\effects\effects.cpp" />
     <ClCompile Include="source\effects\vision_mode.cpp" />
@@ -221,7 +232,9 @@ POPD
     <ClCompile Include="source\interface\overhead_map.cpp" />
     <ClCompile Include="source\items\equipment.cpp" />
     <ClCompile Include="source\items\items.cpp" />
+    <ClCompile Include="source\items\weapon_definitions.cpp" />
     <ClCompile Include="source\memory\byte_swapping.cpp" />
+    <ClCompile Include="source\motor\motor_system_biped.cpp" />
     <ClCompile Include="source\motor\sync_action.cpp" />
     <ClCompile Include="source\networking\logic\network_bandwidth.cpp" />
     <ClCompile Include="source\networking\logic\network_banhammer.cpp" />
@@ -239,13 +252,17 @@ POPD
     <ClCompile Include="source\networking\session\network_session_parameters.cpp" />
     <ClCompile Include="source\networking\session\network_session_parameter_types.cpp" />
     <ClCompile Include="source\networking\transport\transport_qos.cpp" />
+    <ClCompile Include="source\objects\crates.cpp" />
     <ClCompile Include="source\objects\damage_owner.cpp" />
     <ClCompile Include="source\objects\lights.cpp" />
     <ClCompile Include="source\objects\object_activation_regions.cpp" />
     <ClCompile Include="source\objects\object_broadphase.cpp" />
     <ClCompile Include="source\objects\object_placement.cpp" />
+    <ClCompile Include="source\objects\object_recycling.cpp" />
     <ClCompile Include="source\objects\object_scheduler.cpp" />
     <ClCompile Include="source\objects\object_scripting.cpp" />
+    <ClCompile Include="source\objects\reference_lists.cpp" />
+    <ClCompile Include="source\objects\scenery.cpp" />
     <ClCompile Include="source\objects\widgets\widgets.cpp" />
     <ClCompile Include="source\physics\breakable_surfaces.cpp" />
     <ClCompile Include="source\physics\character_physics.cpp" />
@@ -327,7 +344,7 @@ POPD
     <ClCompile Include="source\editor\editor_stubs.cpp" />
     <ClCompile Include="source\effects\contrails.cpp" />
     <ClCompile Include="source\effects\screen_effect.cpp" />
-    <ClCompile Include="source\fmod\fmod.cpp" />
+    <ClCompile Include="common\lib_3dpart\fmod\src\sound_fmod.cpp" />
     <ClCompile Include="source\game\aim_assist.cpp" />
     <ClCompile Include="source\game\cheats.cpp" />
     <ClCompile Include="source\game\game_engine.cpp" />
@@ -650,9 +667,11 @@ POPD
     <ClCompile Include="source\toolbox\game_helpers.cpp" />
     <ClCompile Include="source\units\bipeds.cpp" />
     <ClCompile Include="source\units\biped_definitions.cpp" />
+    <ClCompile Include="source\units\giants.cpp" />
     <ClCompile Include="source\units\units.cpp" />
     <ClCompile Include="source\units\unit_definition.cpp" />
     <ClCompile Include="source\units\unit_dialogue.cpp" />
+    <ClCompile Include="source\units\unit_scripting.cpp" />
     <ClCompile Include="source\units\vehicles.cpp" />
     <ClCompile Include="source\units\vehicle_definitions.cpp" />
     <ClCompile Include="source\units\vehicle_engine.cpp" />
@@ -678,12 +697,19 @@ POPD
     <ClInclude Include="source\ai\path_smoothing.hpp" />
     <ClInclude Include="source\ai\sector.hpp" />
     <ClInclude Include="source\algorithms\qsort.hpp" />
+    <ClInclude Include="source\animations\mixing_board\channels\animation_channel.hpp" />
     <ClInclude Include="source\cache\cache_file_io_failure.hpp" />
     <ClInclude Include="source\cache\fmod_sound_cache.hpp" />
     <ClInclude Include="source\cache\pc_geometry_cache.hpp" />
     <ClInclude Include="source\cache\pc_sound_cache.hpp" />
     <ClInclude Include="source\cache\pc_texture_cache.hpp" />
     <ClInclude Include="source\cache\physical_memory_map.hpp" />
+    <ClInclude Include="common\incl.sys\ds\ds_flags.hpp" />
+    <ClInclude Include="common\incl.sys\ds\ds_string.hpp" />
+    <ClInclude Include="common\incl.sys\ds\ds_vector.hpp" />
+    <ClInclude Include="common\incl.sys\fileio\fileio.hpp" />
+    <ClInclude Include="source\config\version_git_commit.hpp" />
+    <ClInclude Include="source\creatures\creatures.hpp" />
     <ClInclude Include="source\cseries\async.hpp" />
     <ClInclude Include="source\cseries\async_buffer.hpp" />
     <ClInclude Include="source\cseries\async_helpers.hpp" />
@@ -694,6 +720,8 @@ POPD
     <ClInclude Include="source\cseries\upload_debug.hpp" />
     <ClInclude Include="source\data_mining\data_mine_management.hpp" />
     <ClInclude Include="source\data_mining\data_mine_usability.hpp" />
+    <ClInclude Include="source\devices\device_machines.hpp" />
+    <ClInclude Include="source\devices\device_terminals.hpp" />
     <ClInclude Include="source\editor\editor_flags.hpp" />
     <ClInclude Include="source\editor\editor_render_stubs.hpp" />
     <ClInclude Include="source\game\game_achievements.hpp" />
@@ -793,6 +821,7 @@ POPD
     <ClInclude Include="source\items\item_definitions.hpp" />
     <ClInclude Include="source\items\projectiles.hpp" />
     <ClInclude Include="source\items\projectile_definitions.hpp" />
+    <ClInclude Include="source\items\weapon_definitions.hpp" />
     <ClInclude Include="source\main\console.hpp" />
     <ClInclude Include="source\main\debug_keys.hpp" />
     <ClInclude Include="source\main\main_predict.hpp" />
@@ -813,6 +842,7 @@ POPD
     <ClInclude Include="source\memory\sliding_window.hpp" />
     <ClInclude Include="source\models\model_definitions.hpp" />
     <ClInclude Include="source\models\model_skinning.hpp" />
+    <ClInclude Include="source\motor\motor_system_biped.hpp" />
     <ClInclude Include="source\motor\mover.hpp" />
     <ClInclude Include="source\motor\sync_action.hpp" />
     <ClInclude Include="source\motor\vehicle_motor_program.hpp" />
@@ -880,7 +910,7 @@ POPD
     <ClInclude Include="source\effects\contrails.hpp" />
     <ClInclude Include="source\effects\effect_definitions.hpp" />
     <ClInclude Include="source\effects\screen_effect.hpp" />
-    <ClInclude Include="source\fmod\fmod.hpp" />
+    <ClInclude Include="common\lib_3dpart\fmod\src\sound_fmod.hpp" />
     <ClInclude Include="source\game\campaign_metagame_definitions.hpp" />
     <ClInclude Include="source\game\cheats.hpp" />
     <ClInclude Include="source\game\game_engine.hpp" />
@@ -1016,6 +1046,9 @@ POPD
     <ClInclude Include="source\networking\online\online_session.hpp" />
     <ClInclude Include="source\networking\session\network_session_parameter_types.hpp" />
     <ClInclude Include="source\networking\tools\network_web_events.hpp" />
+    <ClInclude Include="source\objects\crates.hpp" />
+    <ClInclude Include="source\objects\reference_lists.hpp" />
+    <ClInclude Include="source\objects\scenery.hpp" />
     <ClInclude Include="source\objects\target_tracking.hpp" />
     <ClInclude Include="source\physics\character_physics.hpp" />
     <ClInclude Include="source\physics\character_physics_mode_ground.hpp" />
@@ -1326,9 +1359,11 @@ POPD
     <ClInclude Include="source\units\bipeds.hpp" />
     <ClInclude Include="source\units\biped_definitions.hpp" />
     <ClInclude Include="source\units\dialogue_definitions.hpp" />
+    <ClInclude Include="source\units\giants.hpp" />
     <ClInclude Include="source\units\units.hpp" />
     <ClInclude Include="source\units\unit_definition.hpp" />
     <ClInclude Include="source\units\unit_dialogue.hpp" />
+    <ClInclude Include="source\units\unit_scripting.hpp" />
     <ClInclude Include="source\units\vehicles.hpp" />
     <ClInclude Include="source\units\vehicle_auto_turret.hpp" />
     <ClInclude Include="source\units\vehicle_definitions.hpp" />

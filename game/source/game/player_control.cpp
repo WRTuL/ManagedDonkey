@@ -161,7 +161,12 @@ void __cdecl player_control_build_action(long player_index, e_input_user_index i
 //.text:005D0AF0 ; void __cdecl player_control_fade_out_all_input(real)
 //.text:005D0B20 ; void __cdecl player_control_fade_out_all_input_for_player(long, real)
 //.text:005D0B80 ; bool __cdecl player_control_flags_test_all_players(e_player_control_bit)
-//.text:005D0BD0 ; s_player_action_context const* __cdecl player_control_get_action_context(long)
+
+s_player_action_context const* __cdecl player_control_get_action_context(long user_index)
+{
+	return INVOKE(0x005D0BD0, player_control_get_action_context, user_index);
+}
+
 //.text:005D0C00 ; long __cdecl player_control_get_aiming_unit_index(e_output_user_index)
 
 void __cdecl player_control_get_aiming_vector(e_output_user_index output_user_index, vector3d* aiming_vector)
@@ -265,7 +270,12 @@ void __cdecl player_control_propagate_output(e_input_user_index input_user_index
 //.text:005D45E0 ; void __cdecl player_control_scale_all_input_for_player(long, real, real)
 //.text:005D4690 ; void __cdecl player_control_set_deterministic_action_test_flags(long, qword)
 //.text:005D46C0 ; void __cdecl player_control_set_external_action(e_output_user_index, s_player_action const*)
-//.text:005D4700 ; void __cdecl player_control_set_facing(e_input_user_index, vector3d const*)
+
+void __cdecl player_control_set_facing(e_input_user_index input_user_index, vector3d const* facing)
+{
+	INVOKE(0x005D4700, player_control_set_facing, input_user_index, facing);
+}
+
 //.text:005D4760 ; void __cdecl player_control_state_build_action(s_player_control_state const*, s_player_action*)
 //.text:005D4820 ; void __cdecl player_control_state_clear(s_player_control_state*)
 //.text:005D4860 ; void __cdecl player_control_suppress_rotate_weapons(e_input_user_index)

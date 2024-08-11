@@ -19,6 +19,7 @@
 #include "interface/gui_screens/game_browser/gui_game_browser.hpp"
 #include "interface/user_interface_hs.hpp"
 #include "interface/user_interface_networking.hpp"
+#include "interface/user_interface_window_manager.hpp"
 #include "main/console.hpp"
 #include "main/levels.hpp"
 #include "main/main.hpp"
@@ -876,6 +877,15 @@ callback_result_t game_reverted_callback(void const* userdata, long token_count,
 	return result;
 }
 
+callback_result_t gui_reset_callback(void const* userdata, long token_count, tokens_t const tokens)
+{
+	COMMAND_CALLBACK_PARAMETER_CHECK;
+
+	window_manager_reset_screens();
+
+	return result;
+}
+
 callback_result_t net_session_create_callback(void const* userdata, long token_count, tokens_t const tokens)
 {
 	COMMAND_CALLBACK_PARAMETER_CHECK;
@@ -1024,6 +1034,16 @@ callback_result_t net_test_text_chat_directed_callback(void const* userdata, lon
 	transport_address_from_string(ip_port, address);
 
 	network_test_text_chat_directed(&address, text);
+
+	return result;
+}
+
+callback_result_t net_test_player_color_callback(void const* userdata, long token_count, tokens_t const tokens)
+{
+	COMMAND_CALLBACK_PARAMETER_CHECK;
+
+	long profile_color_index = atol(tokens[1]->get_string());
+	network_test_set_player_color(profile_color_index);
 
 	return result;
 }
@@ -1799,9 +1819,10 @@ callback_result_t camera_set_mode_callback(void const* userdata, long token_coun
 {
 	COMMAND_CALLBACK_PARAMETER_CHECK;
 
-	long user_index = atol(tokens[1]->get_string());
+	e_output_user_index user_index = static_cast<e_output_user_index>(atol(tokens[1]->get_string()));
 	e_camera_mode camera_mode = static_cast<e_camera_mode>(atol(tokens[2]->get_string()));
-	director_set_camera_mode(user_index, camera_mode);
+	if (user_index != k_output_user_none && VALID_INDEX(camera_mode, k_number_of_output_users))
+		director_set_camera_mode(user_index, camera_mode);
 
 	return result;
 }

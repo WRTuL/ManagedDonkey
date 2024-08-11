@@ -1,16 +1,17 @@
 #include "main/debug_keys.hpp"
 
+#include "ai/ai_debug.hpp"
+#include "ai/ai_script.hpp"
 #include "camera/director.hpp"
+#include "editor/editor_flags.hpp"
 #include "editor/editor_stubs.hpp"
 #include "game/cheats.hpp"
 #include "game/game.hpp"
-#include "editor/editor_flags.hpp"
 #include "interface/terminal.hpp"
 #include "main/console.hpp"
 #include "main/main.hpp"
 #include "main/main_time.hpp"
 #include "memory/thread_local.hpp"
-#include "physics/collisions.hpp"
 #include "rasterizer/rasterizer.hpp"
 #include "units/units.hpp"
 
@@ -840,9 +841,7 @@ void __cdecl debug_keys_update()
 void __cdecl debug_key_select_this_actor(bool key_is_down)
 {
 	//if (key_is_down && game_in_progress())
-	//{
-	//	console_warning("Unimplemented: " __FUNCTION__);
-	//}
+	//	ai_debug.ai_select_this_actor = true;
 
 	if (key_is_down)
 		cheat_all_weapons();
@@ -852,7 +851,7 @@ void __cdecl debug_key_select_prev_encounter(bool key_is_down)
 {
 	//if (key_is_down && game_in_progress())
 	//{
-	//	console_warning("Unimplemented: " __FUNCTION__);
+	//	ai_debug_change_selected_squad(false);
 	//}
 
 	if (key_is_down)
@@ -863,7 +862,7 @@ void __cdecl debug_key_select_next_encounter(bool key_is_down)
 {
 	//if (key_is_down && game_in_progress())
 	//{
-	//	console_warning("Unimplemented: " __FUNCTION__);
+	//	ai_debug_change_selected_squad(true);
 	//}
 
 	if (key_is_down)
@@ -874,7 +873,7 @@ void __cdecl debug_key_select_next_actor(bool key_is_down)
 {
 	if (key_is_down && game_in_progress())
 	{
-		console_warning("Unimplemented: " __FUNCTION__);
+		ai_debug_change_selected_actor(true);
 	}
 }
 
@@ -882,7 +881,7 @@ void __cdecl debug_key_select_prev_actor(bool key_is_down)
 {
 	if (key_is_down && game_in_progress())
 	{
-		console_warning("Unimplemented: " __FUNCTION__);
+		ai_debug_change_selected_actor(false);
 	}
 }
 
@@ -892,23 +891,6 @@ void __cdecl debug_key_render_spray(bool key_is_down)
 	{
 		console_warning("Unimplemented: " __FUNCTION__);
 	}
-}
-
-bool ai_print_scripting = false;
-
-void __cdecl ai_scripting_erase_all()
-{
-	if (ai_print_scripting)
-	{
-		//generate_event(_event_level_warning, "ai: %s: ai_erase_all", hs_runtime_get_executing_thread_name());
-	}
-
-	//ai_erase(NONE, false);
-	//
-	//squad_iterator iterator = {};
-	//squad_iterator_new(&iterator);
-	//while (squad_iterator_next(&iterator))
-	//	ai_script_erase_squad_vehicles(iterator.datum_index);
 }
 
 void __cdecl debug_key_erase_all_actors(bool key_is_down)
@@ -958,28 +940,6 @@ void __cdecl debug_key_rotate_all_units(bool key_is_down)
 					player_set_unit_index(player_index, next_unit);
 			}
 		}
-	}
-}
-
-// #TODO: more testing required
-void __cdecl unit_debug_ninja_rope(long unit_index)
-{
-	unit_datum* unit = (unit_datum*)object_get_and_verify_type(unit_index, _object_mask_unit);
-
-	s_collision_test_flags flags = {}; // 0x1001
-	real_point3d camera_position = {};
-	vector3d aiming_vector = {};
-	collision_result collision;
-	
-	flags.collision_flags.set(_collision_test_structure_bit, true);
-	flags.collision_flags.set(_collision_test_back_facing_surfaces_bit, true);
-	unit_get_camera_position(unit_index, &camera_position);
-	scale_vector3d(&unit->unit.aiming_vector, 25.0f, &aiming_vector);
-	long parent_index = object_get_ultimate_parent(unit_index);
-	if (collision_test_vector(flags, &camera_position, &aiming_vector, parent_index, NONE, &collision) && collision.plane.n.k > 0.95f)
-	{
-		collision.position.z += 0.25f;
-		object_debug_teleport(parent_index, &collision.position);
 	}
 }
 

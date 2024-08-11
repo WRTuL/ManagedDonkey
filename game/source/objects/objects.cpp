@@ -5,9 +5,11 @@
 #include "memory/module.hpp"
 #include "memory/thread_local.hpp"
 #include "models/model_definitions.hpp"
+#include "objects/object_types.hpp"
 #include "physics/havok.hpp"
 #include "profiler/profiler.hpp"
 #include "render/render_debug.hpp"
+#include "simulation/game_interface/simulation_game_action.hpp"
 
 #include <intrin.h>
 #include <math.h>
@@ -45,6 +47,13 @@ bool debug_objects_pathfinding = false;
 bool debug_objects_node_bounds = false;
 bool debug_objects_animation = false;
 
+bool point_in_bounds(real_point3d const* point, real bounds)
+{
+	return point->x >= -bounds && point->x <= bounds
+		&& point->y >= -bounds && point->y <= bounds
+		&& point->z >= -bounds && point->z <= bounds;
+}
+
 void* __cdecl object_header_block_get(long object_index, object_header_block_reference const* reference)
 {
 	object_header_datum const* object_header = object_header_get(object_index);
@@ -77,6 +86,12 @@ void* __cdecl object_header_block_get_with_count(long object_index, object_heade
 }
 
 object_header_datum const* __cdecl object_header_get(long object_index)
+{
+	TLS_DATA_GET_VALUE_REFERENCE(object_header_data);
+	return static_cast<object_header_datum*>(datum_try_and_get(*object_header_data, object_index));
+}
+
+object_header_datum* __cdecl object_header_get_mutable(long object_index)
 {
 	TLS_DATA_GET_VALUE_REFERENCE(object_header_data);
 	return static_cast<object_header_datum*>(datum_try_and_get(*object_header_data, object_index));
@@ -208,7 +223,16 @@ void c_object_identifier::clear()
 
 //.text:00B27CC0 ; 
 //.text:00B27CE0 ; void __cdecl clear_all_object_render_data()
-//.text:00B27D20 ; public: void __cdecl c_object_identifier::clear_for_deletion()
+
+void c_object_identifier::clear_for_deletion()
+{
+	//DECLFUNC(0x00B27D20, void, __thiscall, c_object_identifier*)(this);
+
+	m_source = k_object_source_none;
+	m_origin_bsp_index = NONE;
+	m_unique_id = NONE;
+}
+
 //.text:00B27D30 ; public: void __cdecl c_static_flags_no_init<255>::clear_range(long)
 //.text:00B27D90 ; void __cdecl cluster_build_object_payload(long, s_object_cluster_payload* payload)
 
@@ -253,11 +277,61 @@ long __cdecl cluster_get_next_noncollideable_object_and_payload(long* datum_inde
 //.text:00B281E0 ; real __cdecl compute_time_hours() // probably needs to be a double for actual use
 //.text:00B28240 ; real __cdecl compute_time_minutes() // probably needs to be a double for actual use
 //.text:00B28290 ; real __cdecl compute_time_seconds() // probably needs to be a double for actual use
-//.text:00B282E0 ; public: void __cdecl c_object_identifier::create_dynamic(e_object_type)
-//.text:00B28320 ; public: void __cdecl c_object_identifier::create_from_parent(e_object_type)
-//.text:00B28360 ; public: void __cdecl c_object_identifier::create_from_scenario(e_object_type, long)
-//.text:00B28380 ; public: void __cdecl c_object_identifier::create_from_sky(e_object_type, long)
-//.text:00B283A0 ; public: void __cdecl c_object_identifier::create_from_structure(e_object_type, short, long)
+
+void c_object_identifier::create_dynamic(e_object_type type)
+{
+	//DECLFUNC(0x00B282E0, void, __thiscall, c_object_identifier*, e_object_type)(this, type);
+
+	TLS_DATA_GET_VALUE_REFERENCE(object_globals);
+
+	m_type = type;
+	m_source = _object_source_dynamic;
+	m_origin_bsp_index = NONE;
+	m_unique_id = ++object_globals->__unknown18;
+}
+
+void c_object_identifier::create_from_parent(e_object_type type)
+{
+	//DECLFUNC(0x00B28320, void, __thiscall, c_object_identifier*, e_object_type)(this, type);
+
+	TLS_DATA_GET_VALUE_REFERENCE(object_globals);
+
+	m_type = type;
+	m_source = _object_source_parent;
+	m_origin_bsp_index = NONE;
+	m_unique_id = ++object_globals->__unknown18;
+}
+
+void c_object_identifier::create_from_scenario(e_object_type type, long unique_id)
+{
+	//DECLFUNC(0x00B28360, void, __thiscall, c_object_identifier*, e_object_type, long)(this, type, unique_id);
+
+	m_type = type;
+	m_origin_bsp_index = NONE;
+	m_source = _object_source_editor;
+	m_unique_id = unique_id;
+}
+
+void c_object_identifier::create_from_sky(e_object_type type, long unique_id)
+{
+	//DECLFUNC(0x00B28380, void, __thiscall, c_object_identifier*, e_object_type)(this, type);
+
+	m_type = type;
+	m_origin_bsp_index = NONE;
+	m_source = _object_source_sky;
+	m_unique_id = unique_id;
+}
+
+void c_object_identifier::create_from_structure(e_object_type type, short origin_bsp_index, long unique_id)
+{
+	//DECLFUNC(0x00B283A0, void, __thiscall, c_object_identifier*, e_object_type, short, long)(this, type, origin_bsp_index, unique_id);
+
+	m_type = type;
+	m_origin_bsp_index = origin_bsp_index;
+	m_source = _object_source_structure;
+	m_unique_id = unique_id;
+}
+
 //.text:00B283C0 ; 
 //.text:00B283F0 ; 
 //.text:00B28420 ; 
@@ -279,9 +353,27 @@ long __cdecl find_first_predicted_object_recursive(long object_index)
 	return INVOKE(0x00B286C0, find_first_predicted_object_recursive, object_index);
 }
 
-//.text:00B28740 ; public: long __cdecl c_object_identifier::find_object_index() const
-//.text:00B28800 ; public: s_scenario_object* __cdecl c_object_identifier::find_scenario_object(long*) const
-//.text:00B28820 ; public: s_scenario_object* __cdecl c_object_identifier::find_scenario_object_from_scenario(scenario*, long*) const
+long c_object_identifier::find_object_index() const
+{
+	return DECLFUNC(0x00B28740, long, __thiscall, c_object_identifier const*)(this);
+
+	// #TODO: implement me
+}
+
+s_scenario_object* c_object_identifier::find_scenario_object(long* tag_block_index) const
+{
+	//return DECLFUNC(0x00B28800, s_scenario_object*, __thiscall, c_object_identifier const*, long*)(this, tag_block_index);
+
+	return find_scenario_object_from_scenario(global_scenario, tag_block_index);
+}
+
+s_scenario_object* c_object_identifier::find_scenario_object_from_scenario(struct scenario* scenario, long* tag_block_index) const
+{
+	return DECLFUNC(0x00B28820, s_scenario_object*, __thiscall, c_object_identifier const*, struct scenario*, long*)(this, scenario, tag_block_index);
+
+	// #TODO: implement me
+}
+
 //.text:00B288F0 ; 
 //.text:00B28900 ; 
 //.text:00B28910 ; 
@@ -323,7 +415,14 @@ bool __cdecl garbage_collection_can_run()
 //.text:00B28DD0 ; 
 //.text:00B28DE0 ; 
 //.text:00B28DF0 ; real_orientation* __cdecl get_node_orientation_scratchpad_for_model(render_model_definition const*, long)
-//.text:00B28E60 ; public: long __cdecl c_object_identifier::get_unique_id_direct() const
+
+long c_object_identifier::get_unique_id_direct() const
+{
+	//return DECLFUNC(0x00B28E60, long, __thiscall, c_object_identifier const*)(this);
+
+	return m_unique_id;
+}
+
 //.text:00B28E70 ; similar to `objects_compact_memory_pool`
 //.text:00B28ED0 ; void __cdecl handle_object_render_message(s_object_render_thread_message*, long)
 //.text:00B28F50 ; 
@@ -335,7 +434,14 @@ bool __cdecl garbage_collection_can_run()
 //.text:00B29260 ; 
 //.text:00B29280 ; 
 //.text:00B292D0 ; 
-//.text:00B292E0 ; public: bool __cdecl c_object_identifier::is_equal(c_object_identifier const*) const
+
+bool c_object_identifier::is_equal(c_object_identifier const* other) const
+{
+	return DECLFUNC(0x00B292E0, bool, __thiscall, c_object_identifier const*, c_object_identifier const*)(this, other);
+
+	// #TODO: implement me
+}
+
 //.text:00B29330 ; 
 //.text:00B29350 ; 
 //.text:00B29370 ; 
@@ -404,7 +510,11 @@ void __cdecl object_cinematic_visibility(long object_index, bool enable)
 	INVOKE(0x00B2AA70, object_cinematic_visibility, object_index, enable);
 }
 
-//.text:00B2AAC0 ; void __cdecl object_clear_sync_action(long)
+void __cdecl object_clear_sync_action(long object_index)
+{
+	INVOKE(0x00B2AAC0, object_clear_sync_action, object_index);
+}
+
 //.text:00B2AB10 ; bool __cdecl object_compute_bounding_sphere(long)
 //.text:00B2AD00 ; void __cdecl object_compute_bounding_sphere_recursive(long, real_point3d const*, real*)
 //.text:00B2AEC0 ; bool __cdecl object_compute_change_colors(long)
@@ -821,6 +931,10 @@ void __cdecl object_move(long object_index)
 void __cdecl object_move_position(long object_index, real_point3d const* position, vector3d const* forward, vector3d const* up, s_location const* location)
 {
 	INVOKE(0x00B30050, object_move_position, object_index, position, forward, up, location);
+
+	//ASSERT(object_get(object_index)->object.parent_object_index == NONE);
+	//object_set_position_internal(object_index, position, forward, up, location, false, true, false, false);
+	//object_set_requires_motion(object_index);
 }
 
 void __cdecl object_name_list_allocate()
@@ -856,6 +970,115 @@ bool __cdecl object_needs_rigid_body_update(long object_index)
 long __cdecl object_new(object_placement_data* data)
 {
 	return INVOKE(0x00B30440, object_new, data);
+
+	//if (!TEST_BIT(data->flags, 4) && data->definition_index != NONE)
+	//	object_type_adjust_placement(data);
+	//
+	//if ((data->definition_index != NONE && object_definition_can_be_placed(data->definition_index, data->model_variant_index)) || data->definition_index == NONE)
+	//	return NONE;
+	//
+	//struct object_definition* object_definition = (struct object_definition*)tag_get(OBJECT_TAG, data->definition_index);
+	//object_type_definition* type_definition = object_type_definition_get(object_definition->object.type);
+	//
+	//s_model_definition* model_definition = NULL;
+	//if (object_definition->object.model.index != NONE)
+	//	model_definition = (s_model_definition*)tag_get(MODEL_TAG, object_definition->object.model.index);
+	//
+	//if (object_should_have_havok_component(NONE, data->definition_index))
+	//	havok_memory_garbage_collect();
+	//
+	//long object_index = object_header_new(type_definition->datum_size);
+	//if (object_index == NONE)
+	//	return object_index;
+	//
+	//bool v53 = false;
+	//bool v60 = false;
+	//bool v63 = object_definition->object.multiplayer_object.count() > 0;
+	//bool v64 = false;
+	//
+	//object_header_datum* object_header = object_header_get_mutable(object_index);
+	//object_datum* object = object_header->datum;
+	//
+	//object->object.flags.set(_object_being_created_bit, true);
+	//object->definition_index = data->definition_index;
+	//object->object.map_variant_index = NONE;
+	//object->object.next_recycling_object_index = NONE;
+	//object->object.recycling_time = NONE;
+	//object->object.parent_recycling_group = NONE;
+	//object->object.next_recycling_group_member = NONE;
+	//object->object.scenery_air_probe_index = NONE;
+	//object->object.air_probe_index = NONE;
+	//
+	//object->object.object_identifier = data->object_identifier;
+	//long scenario_datum_index = data->scenario_datum_index;
+	//if (data->object_identifier.m_source == k_object_source_none)
+	//{
+	//	object->object.object_identifier.create_dynamic(object_definition->object.type);
+	//	scenario_datum_index = NONE;
+	//}
+	//
+	//object->object.scenario_datum_index = scenario_datum_index;
+	//object->object.position = data->position;
+	//object->object.forward = data->forward;
+	//object->object.up = data->up;
+	//object->object.transitional_velocity = data->linear_velocity;
+	//object->object.angular_velocity = data->translational_velocity;
+	//object->object.scale = data->scale;
+	//object->object.flags.set(_object_mirrored_bit, TEST_BIT(data->flags, 0));
+	//object->object.flags.set(_object_uses_collidable_list_bit, model_definition && model_definition->collision_model.index != NONE);
+	//object->object.flags.set(_object_is_prt_and_lightmapped_bit, false);
+	//object->object.flags.set(_object_created_with_parent_bit, object->object.object_identifier.m_source == _object_source_parent);
+	//
+	//if (object_definition->object.model.index != NONE)
+	//	object->object.flags.set(_object_render_model_has_instances_bit, render_model_has_instances(model_definition->render_model.index));
+	//
+	//object_header->cluster_index = NONE;
+	//object->object.location = { .cluster_reference = { .bsp_index = NONE, .cluster_index = NONE } };
+	//object->object.first_cluster_reference_index = NONE;
+	//object->object.clusters_touched_on_connection = 0;
+	//object->object.bsp_placement_policy = data->bsp_placement_policy;
+	//object->object.parent_object_index = NONE;
+	//object->object.next_object_index = NONE;
+	//object->object.first_child_object_index = NONE;
+	//object->object.first_widget_index = NONE;
+	//object->object.name_index = NONE;
+	//object->object.damaged_explosion_timer = NONE;
+	//object->object.body_damage_delay_ticks = NONE;
+	//object->object.shield_impact_decay_timer = NONE;
+	//
+	//if (TEST_FLAG(object->object.flags, _object_hidden_bit))
+	//{
+	//	object->object.flags.set(_object_hidden_bit, false);
+	//	object_header_datum const* ultimate_parent_object = object_header_get(object_get_ultimate_parent(object_index));
+	//	if (TEST_FLAG(ultimate_parent_object->flags, _object_header_connected_to_map_bit))
+	//		object_connect_lights_recursive(object_index, false, true, false, false);
+	//	object_update_collision_culling(object_index);
+	//}
+	//
+	//object->object.damage_owner = data->damage_owner;
+	//object->object.structure_bsp_fake_lightprobe_index = NONE;
+	//object->object.havok_component_index = NONE;
+	//object->object.physics_flags = 0;
+	//object->object.variant_index = NONE;
+	//
+	//object->object.physics_flags = TEST_FLAG(object_definition->object.flags, _object_definition_flag_does_not_collide_with_camera_bit) ? FLAG(21) : 0;
+	//SET_BIT(object->object.physics_flags, 22, TEST_FLAG(object_definition->object.secondary_flags, _object_definition_secondary_flag_does_not_affect_projectile_aiming_bit));
+	//SET_BIT(object->object.physics_flags, 9, TEST_BIT(data->flags, 3));
+	//
+	//object->object.in_water_ticks = 32768;
+	//object->object.created_at_rest = TEST_BIT(data->flags, 8);// BYTE1(data->flags) & 1;
+	//object->object.simulation_object_glue_index = NONE;
+	//object->object.owner_team_index = NONE;
+	//object->object.simulation_flags = 0;
+	//object->object.child_variant_index = NONE;
+	//object->object.destroyed_constraints = data->destroyed_constraints;
+	//object->object.loosened_constraints = data->loosened_constraints;
+	//
+	//object_clear_sync_action(object_index);
+	//
+	//SET_BIT(object->object.simulation_flags, 1, data->multiplayer_cinematic_object);
+	//
+	//return object_index;
 }
 
 //.text:00B30E60 ; long __cdecl object_new_by_name(short, bool, bool)
@@ -1204,10 +1427,90 @@ void __cdecl object_set_position_in_sandbox_editor(long object_index, real_point
 	object_set_position_direct(object_index, desired_position, desired_forward, desired_up, location, true);
 }
 
-bool __cdecl object_set_position_internal(long object_index, real_point3d const* desired_position, vector3d const* desired_forward, vector3d const* desired_up, s_location const* location, bool compute_node_matrices, bool set_havok_object_position, bool in_editor, bool disconnected)
+bool __cdecl object_set_position_internal(long object_index, real_point3d const* position, vector3d const* forward, vector3d const* up, s_location const* location, bool compute_node_matrices, bool set_havok_object_position, bool in_editor, bool disconnected)
 {
-	return INVOKE(0x00B33690, object_set_position_internal, object_index, desired_position, desired_forward, desired_up, location, compute_node_matrices, set_havok_object_position, in_editor, disconnected);
+	return INVOKE(0x00B33690, object_set_position_internal, object_index, position, forward, up, location, compute_node_matrices, set_havok_object_position, in_editor, disconnected);
+
+	//bool result = true;
+	//
+	//object_datum* object = object_get(object_index);
+	//
+	//bool connected_to_map = object->object.flags.test(_object_connected_to_map_bit);
+	//if (connected_to_map)
+	//	object_disconnect_from_map(object_index, false);
+	//
+	//if (position)
+	//{
+	//	if (object->object.parent_object_index == NONE && !point_in_bounds(position, 32768.0f))
+	//		result = false;
+	//
+	//	if (result)
+	//	{
+	//		object->object.position = *position;
+	//		simulation_action_object_update(object_index, _simulation_object_update_position);
+	//	}
+	//}
+	//
+	//if (forward)
+	//{
+	//	object->object.forward = *forward;
+	//	object->object.up = *up;
+	//	simulation_action_object_update(object_index, _simulation_object_update_forward_and_up);
+	//}
+	//
+	//havok_object_set_position(object_index, position == NULL, false, false);
+	//
+	//if (connected_to_map)
+	//{
+	//	object_reconnect_to_map(object_index, false, location);
+	//
+	//	if (object->object.flags.test(_object_uses_collidable_list_bit))
+	//		object_broadphase_update_object(object_index);
+	//}
+	//
+	//object_header_datum* object_header = object_header_get_mutable(object_index);
+	//if (object_header->flags.test(_object_header_child_bit))
+	//{
+	//	long ultimate_parent_index = object_get_ultimate_parent(object_index);
+	//	object_header = object_header_get_mutable(ultimate_parent_index);
+	//}
+	//
+	//if (object_header->flags.test(_object_header_active_bit))
+	//{
+	//	object_wake(object_index);
+	//	object_header->flags.set(_object_header_awake_bit, true);
+	//}
+	//
+	//recursive_wake_children_awoken_by_movement(object_index);
+	//
+	//return result;
 }
+
+//.text:00B33830 ; void __cdecl object_set_region_permutation_direct(long, long, long, bool)
+//.text:00B33960 ; 
+//.text:00B339E0 ; 
+
+void __cdecl object_set_requires_motion(long object_index)
+{
+	INVOKE(0x00B33B50, object_set_requires_motion, object_index);
+}
+
+//.text:00B33BC0 ; void __cdecl object_set_scale(long, real, real)
+//.text:00B33C90 ; void __cdecl object_set_scale_fast(long, real, real)
+//.text:00B33D50 ; void __cdecl object_set_scale_internal(long, real, real, bool)
+//.text:00B33E20 ; void __cdecl object_set_scenario_permutation(long, s_scenario_object_permutation*)
+//.text:00B33E30 ; void __cdecl object_set_shadowless(long, bool)
+//.text:00B33E90 ; void __cdecl object_set_shield_stun(long, long)
+//.text:00B33EE0 ; 
+//.text:00B33F80 ; void __cdecl object_set_sync_action(long, long, long)
+//.text:00B33FC0 ; void __cdecl object_set_variant_direct(long, long)
+//.text:00B34040 ; void __cdecl object_set_velocities(long, vector3d const*, vector3d const*)
+//.text:00B34130 ; void __cdecl object_set_velocities_direct(long, vector3d const*, vector3d const*)
+//.text:00B341E0 ; void __cdecl object_set_velocities_internal(long, vector3d const*, vector3d const*, bool)
+//.text:00B34280 ; 
+//.text:00B342D0 ; bool __cdecl object_should_be_active(long, s_game_cluster_bit_vectors const*)
+//.text:00B34380 ; bool __cdecl object_should_be_deleted_when_deactivated(long)
+//.text:00B343D0 ; bool __cdecl object_start_interpolation(long, real)
 
 void* __cdecl object_try_and_get_and_verify_type(long object_index, dword object_type_mask)
 {
@@ -1587,7 +1890,7 @@ void __cdecl object_get_debug_name(long object_index, bool full_name, c_static_s
 	name->clear();
 	if (object->object.name_index != NONE)
 	{
-		s_scenario* scenario = global_scenario_get();
+		struct scenario* scenario = global_scenario_get();
 		scenario_object_name& object_name = scenario->object_names[object->object.name_index];
 
 		name->append_print("%s|n", object_name.name.get_string());

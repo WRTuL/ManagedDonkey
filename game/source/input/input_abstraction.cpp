@@ -5,7 +5,6 @@
 #include "input/input_windows.hpp"
 #include "memory/module.hpp"
 
-
 REFERENCE_DECLARE(0x0244C9D0, s_input_abstraction_globals, input_abstraction_globals);
 
 HOOK_DECLARE(0x0060B3A0, input_abstraction_dispose);
@@ -18,7 +17,7 @@ HOOK_DECLARE(0x0060BE60, input_abstraction_get_controls_method);
 HOOK_DECLARE(0x0060BF00, input_abstraction_get_default_preferences);
 HOOK_DECLARE(0x0060BFE0, input_abstraction_get_input_state);
 HOOK_DECLARE(0x0060C000, input_abstraction_get_player_look_angular_velocity);
-//HOOK_DECLARE(0x0060C040, sub_60C040);
+HOOK_DECLARE(0x0060C040, sub_60C040);
 HOOK_DECLARE(0x0060C390, input_abstraction_initialize);
 //HOOK_DECLARE(0x0060C430, input_abstraction_initialize_for_new_map);
 //HOOK_DECLARE(0x0060C4A0, sub_60C4A0);
@@ -136,7 +135,17 @@ void __cdecl input_abstraction_get_player_look_angular_velocity(long controller_
 
 void __cdecl sub_60C040(long keyboard_preset, s_gamepad_input_preferences* preferences)
 {
-	INVOKE(0x0060C040, sub_60C040, keyboard_preset, preferences);
+	HOOK_INVOKE(, sub_60C040, keyboard_preset, preferences);
+
+	c_enum<e_key_code, short, _key_code_escape, k_total_key_code_count>& reload_left_button = preferences->keyboard_preferences.keys_primary[_button_action_reload_left];
+	c_enum<e_key_code, short, _key_code_escape, k_total_key_code_count>& pick_up_left_button = preferences->keyboard_preferences.keys_primary[_button_action_pick_up_left];
+	c_enum<e_mouse_button, char, _mouse_button_1, k_total_mouse_button_count>& fire_left_button = preferences->keyboard_preferences.mouse_buttons_primary[_button_action_fire_left];
+
+	reload_left_button = _key_code_z;
+	pick_up_left_button = _key_code_z;
+	fire_left_button = _mouse_button_right_click;
+
+	printf("");
 
 	//for (long i = 0; i < k_button_action_count_keyboard; i++)
 	//{

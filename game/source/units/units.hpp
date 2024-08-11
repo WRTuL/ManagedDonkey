@@ -9,6 +9,19 @@
 
 long const k_seat_acceleration_memory_length = 6;
 
+enum e_unit_drop_type
+{
+	_unit_drop_type_drop = 0,
+	_unit_drop_type_delete,
+	_unit_drop_type_drop_right,
+	_unit_drop_type_drop_left,
+	_unit_drop_type_response_to_deletion,
+
+	k_unit_drop_type_count,
+
+	k_unit_drop_type_none = -1
+};
+
 enum e_weapon_set
 {
 	_weapon_set_primary = 0,
@@ -222,7 +235,7 @@ struct _unit_datum
 	long __unknown330; // time value
 
 	// updated in `unit_update_damage`, unit_damage_aftermath_apply
-	short __unknown334;
+	short melee_inhibit_ticks;
 
 	byte __data336[0x2];
 
@@ -258,7 +271,7 @@ struct _unit_datum
 	bool __unknown3FC;
 	byte __pad3FD[0x3];
 
-	// saber related, used is `unit_delete`, `unit_disconnect_from_structure_bsp`
+	// saber related, used is `unit_delete`, `unit_dispose_from_old_structure_bsp`, `sub_B486D0`
 	long __unknown400[2];
 
 	byte __data408[0x4];
@@ -276,7 +289,6 @@ static_assert(0x2FC == OFFSETOF(_unit_datum, __unknown2FC));
 static_assert(0x310 == OFFSETOF(_unit_datum, __unknown310));
 static_assert(0x32E == OFFSETOF(_unit_datum, __unknown32E));
 static_assert(0x330 == OFFSETOF(_unit_datum, __unknown330));
-static_assert(0x334 == OFFSETOF(_unit_datum, __unknown334));
 static_assert(0x336 == OFFSETOF(_unit_datum, __data336));
 static_assert(0x3A0 == OFFSETOF(_unit_datum, __unknown3A0_team_index_update_time));
 static_assert(0x3A4 == OFFSETOF(_unit_datum, __unknown3A4_team_index));
@@ -315,6 +327,7 @@ extern bool debug_objects_unit_camera;
 extern long __cdecl unit_get_current_primary_weapon(long unit_index);
 extern bool __cdecl any_unit_is_dangerous(long* out_unit_index);
 extern bool __cdecl unit_active_camouflage_is_active(long unit_index);
+extern void __cdecl unit_active_camouflage_ding(long unit_index, real active_camo_ding, real active_camo_regrowth_rate);
 extern void __cdecl unit_active_camouflage_disable(long unit_index, real interpolation_time);
 extern void __cdecl unit_active_camouflage_enable(long unit_index, real interpolation_time, long end_time);
 extern void __cdecl unit_active_camouflage_strength(long unit_index, real active_camouflage);
@@ -324,6 +337,7 @@ extern short __cdecl unit_add_grenade_type_to_inventory(long unit_index, short g
 extern void __cdecl unit_add_starting_profile_equipment(long unit_index, short profile_index, bool clear_player, bool create_new);
 extern bool __cdecl unit_add_weapon_to_inventory(long unit_index, long object_index, long weapon_addition_method);
 extern void __cdecl unit_control(long unit_index, unit_control_data const* control_data);
+extern void __cdecl unit_debug_ninja_rope(long unit_index);
 extern long __cdecl unit_get_active_primary_weapon(long unit_index, long* parent_unit_index);
 extern long __cdecl unit_get_aim_assist_dash_target(long unit_index);
 extern bool __cdecl unit_get_aim_position(long unit_index, real_point3d* aim_position);
@@ -355,7 +369,7 @@ extern void __cdecl sub_B4BCB0(s_unknown_unit_struct_sizeof_14* a1);
 extern bool __cdecl sub_B4BD70(long unit_index);
 extern void __cdecl unit_update_predicted_controller(long unit_index);
 extern void __cdecl unit_sync_with_predicted_vehicle(long unit_index);
-extern bool __cdecl unit_update_powered_seats(long unit_index);
+extern bool __cdecl unit_update_seats(long unit_index);
 extern void __cdecl unit_update_target_tracking(long unit_index);
 extern void __cdecl unit_update_team_index(long unit_index);
 extern void __cdecl unit_update_vision_mode(long unit_index);

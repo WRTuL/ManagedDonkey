@@ -16,6 +16,7 @@
 #include "items/equipment_definitions.hpp"
 #include "items/item_definitions.hpp"
 #include "items/projectile_definitions.hpp"
+#include "items/weapon_definitions.hpp"
 #include "main/global_preferences.hpp"
 #include "main/loading.hpp"
 #include "main/main.hpp"
@@ -1321,7 +1322,7 @@ bool __cdecl scenario_tags_load(char const* scenario_path)
 	if (tag_index != NONE)
 	{
 		global_scenario_game_globals_index = cache_file_get_global_tag_index(GLOBALS_TAG);
-		global_scenario = static_cast<s_scenario*>(tag_get(SCENARIO_TAG, global_scenario_index));
+		global_scenario = static_cast<struct scenario*>(tag_get(SCENARIO_TAG, global_scenario_index));
 		global_game_globals = static_cast<s_game_globals*>(tag_get(GLOBALS_TAG, global_scenario_game_globals_index));
 
 		c_rasterizer_globals* rasterizer_globals = global_game_globals->rasterizer_globals_ref.cast_to<c_rasterizer_globals>();
@@ -1780,7 +1781,7 @@ void apply_scenario_instance_modification(cache_file_tag_instance* instance, e_i
 	if (instance->tag_group != SCENARIO_TAG)
 		return;
 
-	s_scenario* scenario = instance->cast_to<s_scenario>();
+	struct scenario* scenario = instance->cast_to<struct scenario>();
 	char const* tag_name = instance->get_name();
 	char const* group_tag_name = instance->tag_group.name.get_string();
 
@@ -2062,6 +2063,37 @@ void apply_equipment_definition_instance_modification(cache_file_tag_instance* i
 }
 
 // #TODO: create some sort of tag modification manager
+void apply_weapon_definition_instance_modification(cache_file_tag_instance* instance, e_instance_modification_stage stage)
+{
+	ASSERT(instance != nullptr);
+
+	if (instance->tag_group != WEAPON_TAG)
+		return;
+
+	struct weapon_definition* weapon_definition = instance->cast_to<struct weapon_definition>();
+	char const* tag_name = instance->get_name();
+	char const* group_tag_name = instance->tag_group.name.get_string();
+
+	switch (stage)
+	{
+	case _instance_modification_stage_tag_load:
+	{
+	}
+	break;
+	case _instance_modification_stage_tag_fixup:
+	{
+		if (print_reference_updates) c_console::write_line("%s.%s", tag_name, group_tag_name);
+		UPDATE_STRUCT_POINTER_REFERENCE_NAMES(weapon_definition);
+	}
+	break;
+	case _instance_modification_stage_after_scenario_tags_loaded:
+	{
+	}
+	break;
+	}
+}
+
+// #TODO: create some sort of tag modification manager
 void apply_projectile_definition_instance_modification(cache_file_tag_instance* instance, e_instance_modification_stage stage)
 {
 	ASSERT(instance != nullptr);
@@ -2112,6 +2144,7 @@ void tag_instance_modification_apply(cache_file_tag_instance* instance, e_instan
 	APPLY_INSTANCE_MODIFICATION(vehicle_definition);
 	APPLY_INSTANCE_MODIFICATION(item_definition);
 	APPLY_INSTANCE_MODIFICATION(equipment_definition);
+	APPLY_INSTANCE_MODIFICATION(weapon_definition);
 	APPLY_INSTANCE_MODIFICATION(projectile_definition);
 
 #undef APPLY_INSTANCE_MODIFICATION

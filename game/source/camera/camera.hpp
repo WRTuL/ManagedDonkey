@@ -17,16 +17,17 @@ enum e_camera_mode
 	k_camera_mode_null = -1,
 };
 
+enum e_director_perspective;
 enum e_output_user_index;
 
 struct s_observer_command;
 
 struct c_camera
 {
-	virtual e_camera_mode get_type();
-	virtual long get_perspective();
+	virtual e_camera_mode get_type() const;
+	virtual e_director_perspective get_perspective() const;
 	virtual void update(e_output_user_index output_user_index, real a2, s_observer_command* result);
-	virtual long get_target();
+	virtual long get_target() const;
 	virtual void set_target(long target_index);
 	virtual void set_position(real_point3d const* position);
 	virtual void set_forward(vector3d const* forward);
@@ -61,6 +62,6 @@ static_assert(sizeof(c_null_camera) == 0x4C);
 //extern char const* const (&global_camera_mode_names)[k_number_of_camera_modes];
 extern char const* const global_camera_mode_names[k_number_of_camera_modes];
 
-extern const char* camera_mode_get_name(long camera_mode);
-extern e_camera_mode camera_mode_from_string(const char* str);
+extern char const* camera_mode_get_name(long camera_mode);
+extern e_camera_mode camera_mode_from_string(char const* str);
 

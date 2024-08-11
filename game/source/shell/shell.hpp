@@ -621,6 +621,29 @@ enum e_user_interface_session_leave_reason
 	k_user_interface_session_leave_reason_count
 };
 
+enum e_network_session_peer_properties_status_flags
+{
+	_network_session_peer_properties_status_game_stats_written_bit = 0,
+	_network_session_peer_properties_status_match_ready_to_start_bit,
+	_network_session_peer_properties_status_match_arbitration_succeeded_bit,
+	_network_session_peer_properties_status_match_arbitration_failed_bit,
+	_network_session_peer_properties_status_match_teams_selected_bit,
+	_network_session_peer_properties_status_match_repeated_play_set_bit,
+	_network_session_peer_properties_status_match_started_bit,
+	_network_session_peer_properties_status_match_start_failed_bit,
+	_network_session_peer_properties_status_match_initial_stats_written_bit,
+	_network_session_peer_properties_status_match_initial_stats_write_failed_bit,
+	_network_session_peer_properties_status_match_stats_written_bit,
+	_network_session_peer_properties_status_match_host_selection_complete_bit,
+	_network_session_peer_properties_status_match_post_match_countdown_bit,
+	_network_session_peer_properties_status_match_idle_controller_bit,
+	_network_session_peer_properties_status_match_ready_for_next_match_bit,
+	_network_session_peer_properties_status_match_simulation_aborted_bit,
+	_network_session_peer_properties_status_match_acknowledge_sync_bit,
+
+	k_network_session_peer_properties_status_flags
+};
+
 enum e_ui_message_type
 {
 	_ui_message_type_unknown0 = 0,
@@ -775,6 +798,26 @@ enum e_damage_reporting_type
 	_damage_reporting_type_marksman_rifle,
 
 	k_damage_reporting_type_count
+};
+
+// find an actual name for this and also place it in the correct location
+enum e_damage_aftermath_flags
+{
+	// used in `damage_aftermath_is_important`
+	_damage_aftermath_unknown0_bit = 0,
+
+	_damage_aftermath_shield_depleted_bit,
+	_damage_aftermath_area_of_effect_bit,
+	_damage_aftermath_any_damage_dealt_bit,
+	_damage_aftermath_damaged_by_friendly_bit,
+	_damage_aftermath_silent_bit,
+	_damage_aftermath_killed_instantly_bit,
+	_damage_aftermath_primary_recipient_bit,
+	_damage_aftermath_outside_aoe_dmg_range_bit,
+	_damage_aftermath_unknown9_bit,
+	_damage_aftermath_emp_bit,
+
+	k_damage_aftermath_flags
 };
 
 enum e_interface_font

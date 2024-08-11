@@ -227,7 +227,7 @@ struct object_datum
 	long definition_index;
 	_object_datum object;
 };
-static_assert(sizeof(object_datum) == sizeof(long) +  sizeof(_object_datum));
+static_assert(sizeof(object_datum) == sizeof(long) + sizeof(_object_datum));
 
 // Same as Halo 3
 enum e_object_header_flags
@@ -506,6 +506,7 @@ struct s_scenario_object;
 extern void* __cdecl object_header_block_get(long object_index, object_header_block_reference const* reference);
 extern void* __cdecl object_header_block_get_with_count(long object_index, object_header_block_reference const* reference, unsigned int element_size, long* element_count);
 extern object_header_datum const* __cdecl object_header_get(long object_index);
+extern object_header_datum* __cdecl object_header_get_mutable(long object_index);
 extern object_datum* __cdecl object_get(long object_index);
 extern void* __cdecl object_get_and_verify_type(long object_index, dword object_type_mask);
 extern e_object_type __cdecl object_get_type(long object_index);
@@ -529,6 +530,7 @@ extern void __cdecl object_choose_variant(long object_index, long name);
 extern void __cdecl object_cinematic_collision(long object_index, bool enable);
 extern void __cdecl object_cinematic_lod(long object_index, bool enable);
 extern void __cdecl object_cinematic_visibility(long object_index, bool enable);
+extern void __cdecl object_clear_sync_action(long object_index);
 extern void __cdecl object_connect_lights(long object_index, bool disconnect_this_object, bool reconnect_this_object);
 extern void __cdecl object_connect_lights_recursive(long object_index, bool disconnect_this_object, bool reconnect_this_object, bool a3, bool a4);
 extern long __cdecl object_count(long type_flags, byte header_mask);
@@ -650,6 +652,7 @@ extern void __cdecl object_set_model_state_property(long object_index, long a2, 
 extern void __cdecl object_set_model_state_property_per_region(long object_index, long a2, long a3, short a4, bool a5);
 extern void __cdecl object_set_object_index_for_name_index(short name_index, long object_index);
 extern bool __cdecl object_set_position_internal(long object_index, real_point3d const* desired_position, vector3d const* desired_forward, vector3d const* desired_up, s_location const* location, bool compute_node_matrices, bool set_havok_object_position, bool in_editor, bool disconnected);
+extern void __cdecl object_set_requires_motion(long object_index);
 extern void __cdecl object_set_position(long object_index, real_point3d const* desired_position, vector3d const* desired_forward, vector3d const* desired_up, s_location const* location);
 extern void __cdecl object_set_position_direct(long object_index, real_point3d const* desired_position, vector3d const* desired_forward, vector3d const* desired_up, s_location const* location, bool in_editor);
 extern void __cdecl object_set_position_in_editor(long object_index, real_point3d const* desired_position, vector3d const* desired_forward, vector3d const* desired_up, s_location const* location, bool at_rest);

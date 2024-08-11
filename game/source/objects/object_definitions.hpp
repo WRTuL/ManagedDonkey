@@ -125,7 +125,7 @@ struct object_node_map_defintion;
 struct s_object_health_pack_definition;
 struct _object_definition
 {
-	short type;
+	c_enum<e_object_type, short, _object_type_biped, k_object_type_count> type;
 	c_flags<e_object_definition_flags, word_flags, k_object_definition_flags> flags;
 	real bounding_radius; // world units
 	real_point3d bounding_offset;
@@ -434,12 +434,24 @@ struct s_scenario_multiplayer_object_properties
 };
 static_assert(sizeof(s_scenario_multiplayer_object_properties) == 0x34);
 
+struct s_scenario_object;
 struct c_object_identifier
 {
-	e_object_type get_type() const;
 	void clear();
+	void clear_for_deletion();
+	void create_dynamic(e_object_type type);
+	void create_from_parent(e_object_type type);
+	void create_from_scenario(e_object_type type, long unique_id);
+	void create_from_sky(e_object_type type, long unique_id);
+	void create_from_structure(e_object_type type, short origin_bsp_index, long unique_id);
+	long find_object_index() const;
+	s_scenario_object* find_scenario_object(long* tag_block_index) const;
+	s_scenario_object* find_scenario_object_from_scenario(struct scenario* scenario, long* tag_block_index) const;
+	long get_unique_id_direct() const;
+	bool is_equal(c_object_identifier const* other) const;
+	e_object_type get_type() const;
 
-	tag m_unique_id; // 'obj#'
+	long m_unique_id; // 'obj#'
 
 	// scenario_structure_bsp_reference
 	short m_origin_bsp_index;

@@ -3,7 +3,9 @@
 #include "cseries/cseries.hpp"
 #include "cseries/cseries_events.hpp"
 #include "main/global_preferences.hpp"
+#include "main/main.hpp"
 #include "memory/module.hpp"
+#include "rasterizer/rasterizer_main.hpp"
 #include "rasterizer/rasterizer_resource_definitions.hpp"
 #include "render/screen_postprocess.hpp"
 #include "render_methods/render_method_submit.hpp"
@@ -14,8 +16,12 @@
 
 #include <d3d9.h>
 
+REFERENCE_DECLARE(0x050DD9D0, bool, c_rasterizer::g_d3d_device_is_lost);
+REFERENCE_DECLARE(0x050DD9D1, bool, c_rasterizer::g_d3d_device_reset);
 REFERENCE_DECLARE_ARRAY(0x01692A0C, D3DRENDERSTATETYPE, c_rasterizer::x_last_render_state_types, 4);
+REFERENCE_DECLARE(0x019104FC, dword, c_rasterizer::g_render_thread);
 REFERENCE_DECLARE(0x019106C0, s_rasterizer_render_globals, c_rasterizer::render_globals);
+REFERENCE_DECLARE(0x0194FEA8, dword, c_rasterizer::g_render_thread_begin_scene);
 REFERENCE_DECLARE(0x050DADDC, IDirect3DDevice9Ex*, c_rasterizer::g_device);
 REFERENCE_DECLARE_ARRAY(0x050DADE0, bool, c_rasterizer::byte_50DADE0, 3);
 REFERENCE_DECLARE_ARRAY(0x050DADE4, IDirect3DQuery9*, c_rasterizer::dword_50DADE4, 3);
@@ -61,6 +67,8 @@ HOOK_DECLARE_CLASS(0x00A1F9C0, c_rasterizer, end_albedo);
 
 // Fix aspect ratio not matching resolution
 HOOK_DECLARE_CLASS(0x00A1FA30, c_rasterizer, get_aspect_ratio);
+
+HOOK_DECLARE_CLASS(0x00A212A0, c_rasterizer, begin_frame);
 
 //HOOK_DECLARE_CLASS(0x00A22D10, c_rasterizer, set_alpha_blend_mode);
 //HOOK_DECLARE_CLASS(0x00A231E0, c_rasterizer, set_color_write_enable);
@@ -441,9 +449,116 @@ void __cdecl c_rasterizer::shell_initialize(bool window_exists, bool windowed)
 	INVOKE(0x00A20370, shell_initialize, window_exists, windowed);
 }
 
+void __cdecl c_rasterizer::set_render_resolution(long width, long height, bool fullscreen)
+{
+	INVOKE(0x00A22130, set_render_resolution, width, height, fullscreen);
+}
+
+bool __cdecl c_rasterizer::test_cooperative_level()
+{
+	return INVOKE(0x00A22670, test_cooperative_level);
+}
+
+bool __cdecl c_rasterizer::reset_device()
+{
+	//return INVOKE(0x00A226D0, reset_device);
+
+	c_rasterizer::cleanup_before_device_reset();
+
+	D3DPRESENT_PARAMETERS* presentation_parameters = get_presentation_parameters();
+	*presentation_parameters = *get_new_presentation_parameters();
+
+	bool fullscreen = global_preferences_get_fullscreen();
+
+	LONG window_style = fullscreen ? 0 : 0xCA0000;
+	SetWindowLongA(g_windows_params.created_window_handle, GWL_STYLE, window_style);
+
+	if (fullscreen)
+	{
+		ShowWindow(g_windows_params.created_window_handle, SW_MAXIMIZE);
+	}
+	else
+	{
+		RECT rect{};
+		rect.left = 0;
+		rect.top = 0;
+		rect.right = presentation_parameters->BackBufferWidth;
+		rect.bottom = presentation_parameters->BackBufferHeight;
+
+		int window_x = 0;
+		int window_y = 0;
+		//if (strstr(shell_get_command_line(), "-centered") != 0)
+		//{
+		//	window_x = (GetSystemMetrics(SM_CXSCREEN) - rect.right) / 2;
+		//	window_y = (GetSystemMetrics(SM_CYSCREEN) - rect.bottom) / 2;
+		//}
+
+		AdjustWindowRect(&rect, window_style, 0);
+		SetWindowPos(
+			g_windows_params.created_window_handle,
+			HWND_NOTOPMOST,
+			window_x,
+			window_y,
+			rect.right - rect.left,
+			rect.bottom - rect.top,
+			SWP_SHOWWINDOW);
+		ShowWindow(g_windows_params.created_window_handle, SW_SHOWNORMAL);
+	}
+
+	RECT rect{};
+	GetClientRect(g_windows_params.created_window_handle, &rect);
+	c_rasterizer::render_globals.window_width24 = rect.right - rect.left;
+	c_rasterizer::render_globals.window_height28 = rect.bottom - rect.top;
+
+	set_render_resolution(presentation_parameters->BackBufferWidth, presentation_parameters->BackBufferHeight, fullscreen);
+	presentation_parameters->BackBufferWidth = c_rasterizer::render_globals.back_buffer_width;
+	presentation_parameters->BackBufferHeight = c_rasterizer::render_globals.back_buffer_height;
+
+	sub_5129B0();
+
+	if (g_d3d_device_is_lost = FAILED(c_rasterizer::g_device->Reset(presentation_parameters)))
+	{
+		if (g_d3d_device_is_lost = FAILED(c_rasterizer::g_device->Reset(presentation_parameters)))
+			exit(D3DERR_DEVICENOTRESET);
+	}
+
+	c_rasterizer::initialize_after_device_creation_or_reset();
+	g_d3d_device_reset = 0;
+
+	return true;
+}
+
 bool __cdecl c_rasterizer::begin_frame()
 {
-	return INVOKE(0x00A212A0, begin_frame);
+	//return INVOKE(0x00A212A0, begin_frame);
+
+	if (!c_rasterizer::g_device)
+		return true;
+
+	g_render_thread_begin_scene = GetCurrentThreadId();
+
+	if (g_d3d_device_is_lost || g_d3d_device_reset)
+	{
+		if (g_render_thread != get_current_thread_index())
+		{
+			main_set_single_thread_request_flag(8, true);
+			return 0;
+		}
+
+		if (g_d3d_device_is_lost)
+		{
+			if (!test_cooperative_level())
+				return true;
+		}
+		else if (g_d3d_device_reset)
+		{
+			reset_device();
+		}
+	}
+
+	main_set_single_thread_request_flag(8, false);
+
+	return SUCCEEDED(c_rasterizer::g_device->BeginScene());
 }
 
 void __cdecl c_rasterizer::begin_high_quality_blend()
@@ -1316,7 +1431,7 @@ bool create_bitmap_info_header(HWND window_handle, HBITMAP bitmap_handle, LPBITM
 	return true;
 }
 
-bool get_device_context_for_window(HWND window_handle, const char* file_name, HBITMAP bitmap_handle, HDC window_device_context)
+bool get_device_context_for_window(HWND window_handle, char const* file_name, HBITMAP bitmap_handle, HDC window_device_context)
 {
 	if (!window_handle)
 	{

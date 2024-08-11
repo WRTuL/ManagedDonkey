@@ -7,7 +7,7 @@
 #include "game/game_engine_player_traits.hpp"
 
 struct c_game_engine_ctf_variant :
-	c_game_engine_base_variant
+	public c_game_engine_base_variant
 {
 public:
 	c_game_engine_ctf_variant* constructor()
@@ -93,7 +93,13 @@ struct s_ctf_shared_globals
 {
 	c_static_array<c_area_set<c_area, 3>, 9> area_set0;
 	c_static_array<c_area_set<c_area, 3>, 9> area_setB1C;
-	byte __data1638[0x12];
+	bool __unknown1638;
+	bool __unknown1639;
+	byte __data163A[0x2];
+	long defensive_team;
+	long __unknown1640;
+	byte __data1644[0x4];
+	word_flags helper_flags;
 	word_flags flags;
 };
 static_assert(sizeof(s_ctf_shared_globals) == 0x164C);
@@ -101,10 +107,10 @@ static_assert(sizeof(s_ctf_shared_globals) == 0x164C);
 struct s_ctf_globals
 {
 	s_ctf_shared_globals shared_globals;
-	c_static_array<dword, 9> __unknown164C;
-	c_static_array<word, 9> __unknown1670;
+	c_static_array<dword, 9> touch_return_timers;
+	c_static_array<word, 9> flag_reset_timers;
 	c_static_array<dword, 9> __unknown1684;
-	c_static_array<byte, 9> __unknown16A8;
+	c_static_array<byte_flags, 9> flag_weapon_flags;
 	c_static_array<word, 9> __unknown16B2;
 	c_static_array<word, 9> __unknown16C4;
 };

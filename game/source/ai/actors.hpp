@@ -55,9 +55,9 @@ struct actor_meta_data
 	bool active;
 	bool squadless;
 
-	byte ___data7[0x1];
+	byte __data7[0x1];
 	bool __unknown8;
-	byte ___data9[0x3];
+	byte __data9[0x3];
 
 	real original_vitality;
 
@@ -476,6 +476,8 @@ struct actor_iterator : c_data_iterator<actor_datum>
 };
 static_assert(sizeof(actor_iterator) == 0x18);
 
+extern void __cdecl actor_delete(long actor_index, bool a2);
+extern void __cdecl actor_erase(long actor_index, bool delete_immediately);
 extern void __cdecl actor_iterator_new(actor_iterator* iterator, bool a2);
 extern actor_datum* __cdecl actor_iterator_next(actor_iterator* iterator);
 

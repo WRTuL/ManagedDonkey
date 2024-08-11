@@ -262,8 +262,9 @@ struct multiplayer_player_info
 	long revenge_shield_boost_unknown84; // = game_time_get();
 	long revenge_shield_boost_player_index; // == `player_index`
 	s_damage_reporting_info revenge_shield_boost_damage;
+	bool revenge_shield_boost_unknown90;
 
-	bool __unknown90;
+	// pad?
 	byte __data91[3];
 };
 static_assert(sizeof(multiplayer_player_info) == 0x94);
@@ -387,6 +388,7 @@ enum e_player_flags
 	// game_engine_update_coop_spawning
 	// halo reach x360: bit 14
 	// halo 4 x360:     bit 16
+	// look_training_hack?
 	_player_unknown_bit14,
 
 	// players_coop_update_respawn
@@ -686,7 +688,7 @@ static_assert(0x2E16 == OFFSETOF(player_datum, multiplayer.revenge_shield_boost_
 static_assert(0x2E18 == OFFSETOF(player_datum, multiplayer.revenge_shield_boost_unknown84));
 static_assert(0x2E1C == OFFSETOF(player_datum, multiplayer.revenge_shield_boost_player_index));
 static_assert(0x2E20 == OFFSETOF(player_datum, multiplayer.revenge_shield_boost_damage));
-static_assert(0x2E24 == OFFSETOF(player_datum, multiplayer.__unknown90));
+static_assert(0x2E24 == OFFSETOF(player_datum, multiplayer.revenge_shield_boost_unknown90));
 static_assert(0x2E25 == OFFSETOF(player_datum, multiplayer.__data91));
 static_assert(0x2E28 == OFFSETOF(player_datum, __data2E28));
 static_assert(0x2E2A == OFFSETOF(player_datum, __data2E2A));
@@ -780,69 +782,31 @@ static_assert(sizeof(s_players_global_data) == 0x234);
 
 struct c_player_in_game_iterator
 {
+public:
 	void begin();
+	bool next();
+	player_datum* get_datum();
+	long get_index() const;
+	short get_absolute_index() const;
 
-	bool next()
-	{
-		for (m_iterator.m_datum = (player_datum*)data_iterator_next(&m_iterator.m_iterator);
-			m_iterator.m_datum && TEST_BIT(m_iterator.m_datum->flags, _player_left_game_bit);
-			m_iterator.m_datum = (player_datum*)data_iterator_next(&m_iterator.m_iterator))
-		{
-		}
-
-		return m_iterator.m_datum != NULL;
-	}
-
-	player_datum* get_datum()
-	{
-		return m_iterator.m_datum;
-	}
-
-	long get_index() const
-	{
-		return m_iterator.m_iterator.index;
-	}
-
-	short get_absolute_index() const
-	{
-		return m_iterator.get_absolute_index();
-	}
-
+protected:
 	c_data_iterator<player_datum> m_iterator;
 };
 
 struct c_player_with_unit_iterator
 {
+public:
 	void begin();
+	bool next();
+	player_datum* get_datum();
+	long get_index() const;
+	short get_absolute_index() const;
 
-	bool next()
-	{
-		for (m_iterator.m_datum = (player_datum*)data_iterator_next(&m_iterator.m_iterator);
-			m_iterator.m_datum && m_iterator.m_datum->unit_index == NONE;
-			m_iterator.m_datum = (player_datum*)data_iterator_next(&m_iterator.m_iterator))
-		{
-		}
-
-		return m_iterator.m_datum != NULL;
-	}
-
-	player_datum* get_datum()
-	{
-		return m_iterator.m_datum;
-	}
-
-	long get_index() const
-	{
-		return m_iterator.m_iterator.index;
-	}
-
-	short get_absolute_index() const
-	{
-		return m_iterator.get_absolute_index();
-	}
-
+protected:
 	c_data_iterator<player_datum> m_iterator;
 };
+
+struct s_player_interaction;
 
 extern string_id g_player_desired_mode_override;
 extern void player_override_desired_mode(long desired_mode_override);
@@ -850,8 +814,10 @@ extern void players_debug_render();
 
 extern void __cdecl player_delete(long player_index);
 extern long __cdecl player_index_from_unit_index(long unit_index);
+extern bool __cdecl player_interaction_exists(long player_index, dword object_mask, s_player_interaction const* interaction);
 extern bool __cdecl player_is_reading_terminal();
 extern long __cdecl player_new(long player_array_index, game_player_options const* options, bool joined_in_progress);
+extern void __cdecl player_set_facing(long player_index, vector3d const* facing);
 extern void __cdecl player_set_unit_index(long player_index, long unit_index);
 extern bool __cdecl player_spawn(long player_index, real_point3d const* position, real const* facing);
 extern void __cdecl player_suppress_action(long player_index, long player_suppress_action_type);

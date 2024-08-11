@@ -13,6 +13,7 @@
 #include "game/player_mapping.hpp"
 #include "interface/interface.hpp"
 #include "interface/interface_constants.hpp"
+#include "main/console.hpp"
 #include "memory/thread_local.hpp"
 #include "objects/objects.hpp"
 #include "render/render_debug.hpp"
@@ -634,7 +635,7 @@ void ai_debug_render_squads()
 	squad_iterator_new(&squad_iter);
 	while (squad_datum* squad = squad_iterator_next(&squad_iter))
 	{
-		s_scenario* scenario = global_scenario_get();
+		struct scenario* scenario = global_scenario_get();
 		s_squad_definition* squad_def = &scenario->squads[DATUM_INDEX_TO_ABSOLUTE_INDEX(squad_iter.squad_index)];
 		real_point3d position = *global_origin3d;
 
@@ -935,5 +936,15 @@ void ai_debug_render_dynamic_firing_positions()
 			render_debug_line(true, &actor->input.position.head_position, &ai_point_position, global_real_argb_blue);
 		}
 	}
+}
+
+void ai_debug_change_selected_squad(bool next_squad)
+{
+	console_warning("Unimplemented: " __FUNCTION__);
+}
+
+void ai_debug_change_selected_actor(bool next_actor)
+{
+	console_warning("Unimplemented: " __FUNCTION__);
 }
 

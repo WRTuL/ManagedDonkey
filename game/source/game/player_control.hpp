@@ -365,7 +365,7 @@ extern void __cdecl player_control_build_action(long player_index, e_input_user_
 //extern void __cdecl player_control_fade_out_all_input(real);
 //extern void __cdecl player_control_fade_out_all_input_for_player(long, real);
 //extern bool __cdecl player_control_flags_test_all_players(e_player_control_bit);
-//extern s_player_action_context const* __cdecl player_control_get_action_context(long);
+extern s_player_action_context const* __cdecl player_control_get_action_context(long user_index);
 //extern long __cdecl player_control_get_aiming_unit_index(e_output_user_index);
 extern void __cdecl player_control_get_aiming_vector(e_output_user_index output_user_index, vector3d* aiming_vector);
 //extern void __cdecl player_control_get_controller_input(e_input_user_index, e_controller_index, real, real, s_game_input_state**, s_player_control_input*);
@@ -396,7 +396,7 @@ extern void __cdecl player_control_propagate_output(e_input_user_index input_use
 //extern void __cdecl player_control_scale_all_input_for_player(long, real, real);
 //extern void __cdecl player_control_set_deterministic_action_test_flags(long, qword);
 //extern void __cdecl player_control_set_external_action(e_output_user_index, s_player_action const*);
-//extern void __cdecl player_control_set_facing(e_input_user_index, vector3d const*);
+extern void __cdecl player_control_set_facing(e_input_user_index input_user_index, vector3d const* facing);
 //extern void __cdecl player_control_state_build_action(s_player_control_state const*, s_player_action*);
 //extern void __cdecl player_control_state_clear(s_player_control_state*);
 //extern void __cdecl player_control_suppress_rotate_weapons(e_input_user_index);

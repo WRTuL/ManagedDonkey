@@ -10,7 +10,7 @@ struct c_virtual_keyboard_task :
 {
 public:
 	c_virtual_keyboard_task* __cdecl constructor(
-		const char* file,
+		char const* file,
 		long line,
 		e_controller_index controller_index,
 		const wchar_t* default_text,
@@ -46,7 +46,7 @@ public:
 	);
 
 	virtual void* destructor(dword a1) override;
-	virtual const char* get_context_string() override;
+	virtual char const* get_context_string() override;
 	virtual dword start(void* platform_handle) override;
 
 	dword __thiscall _start(void* platform_handle);

@@ -85,7 +85,7 @@ long* __cdecl hs_arguments_evaluate(long thread_index, short parameter_count, sh
 	return INVOKE(0x00594140, hs_arguments_evaluate, thread_index, parameter_count, formal_parameters, a4);
 }
 
-void __cdecl hs_breakpoint(const char* s)
+void __cdecl hs_breakpoint(char const* s)
 {
 	//INVOKE(0x005942E0, hs_breakpoint, s);
 
@@ -231,7 +231,12 @@ bool __cdecl hs_object_type_can_cast(short actual_type, short desired_type)
 //.text:00597730 ; void __cdecl hs_runtime_dispose()
 //.text:00597750 ; void __cdecl hs_runtime_dispose_from_old_map()
 //.text:005977A0 ; bool __cdecl hs_runtime_evaluate(long, long*, bool)
-//.text:00597870 ; char const* __cdecl hs_runtime_get_executing_thread_name()
+
+char const* __cdecl hs_runtime_get_executing_thread_name()
+{
+	return INVOKE(0x00597870, hs_runtime_get_executing_thread_name);
+}
+
 //.text:005978A0 ; long __cdecl hs_runtime_index_from_global_designator(long)
 //.text:005978D0 ; void __cdecl hs_runtime_initialize()
 //.text:00597A80 ; void __cdecl hs_runtime_initialize_for_new_map()
@@ -255,7 +260,7 @@ long __cdecl hs_runtime_script_begin(short script_index, e_hs_script_type script
 {
 	//return INVOKE(0x00598050, hs_runtime_script_begin, script_index, script_type, thread_type);
 
-	s_scenario* scenario = global_scenario_get();
+	struct scenario* scenario = global_scenario_get();
 	if (!scenario)
 		return NONE;
 
@@ -389,7 +394,7 @@ void render_debug_scripting_globals()
 	//	c_rasterizer_draw_string draw_string{};
 	//	c_font_cache_mt_safe font_cache{};
 	//	short tab_stops[]{ 300 };
-	//	s_scenario* scenario = global_scenario_get();
+	//	struct scenario* scenario = global_scenario_get();
 	//	interface_set_bitmap_text_draw_mode(&draw_string, 0, -1, 0, 0, 5, 0);
 	//	draw_string.set_tab_stops(tab_stops, NUMBEROF(tab_stops));
 	//
